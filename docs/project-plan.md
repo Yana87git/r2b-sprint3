@@ -435,6 +435,26 @@ Build したプロダクトを題材に、C4 model の3階層（L1 全体像／L
 参考料金（1Mトークンあたり）: Opus 5 = $5 入力 / $25 出力、Sonnet 5 = $2 / $10、Haiku 4.5 = $1 / $5。
 **モデルは `/design-agent` で `agent-plan.md` に書いた値が `definition.py` に写される**ため、Design フェーズがそのままコスト設計になる。
 
+#### APIキーの保管と受け渡し
+
+キーは **macOS キーチェーン**に置いてある（サービス名 `anthropic-r2b-sprint3`）。
+
+```zsh
+# 保存・更新（-U で上書き。read -rs なので入力は画面に出ない）
+read -rs "K?APIキー: " && security add-generic-password -U -a "$USER" -s anthropic-r2b-sprint3 -w "$K" && unset K
+
+# 存在確認（キーを表示しない）
+security find-generic-password -a "$USER" -s anthropic-r2b-sprint3 >/dev/null 2>&1 && echo "✅ あり" || echo "❌ なし"
+
+# Slice 0-7 で .env に書き込む（$( ) の中で完結するので画面に出ない）
+grep -n "\.env" .gitignore                      # ← 先に除外を確認
+echo "ANTHROPIC_API_KEY=$(security find-generic-password -a "$USER" -s anthropic-r2b-sprint3 -w)" >> backend/.env
+git status --porcelain | grep -q "backend/.env" && echo "⚠️ 追跡対象になっている" || echo "✅ git 管理外"
+```
+
+> **`security find-generic-password -w` を単体で実行しない。** キーが平文でターミナルに出て、スクロールバックとスクリーンショットに残る。
+> 9/8 に一度これをやってしまい、キーを作り直した。確認は上の「存在確認」の形で行う。
+
 日報は #0110_開発チーム10 に継続して投稿する（Sprint3 は個人開発だが、日報とチャンネルはそのまま継続と運営から案内あり）。
 
 ---
