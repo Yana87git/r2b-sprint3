@@ -598,6 +598,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
       <button data-v="wtable">Word（表）</button>
       <button data-v="wpara">Word（段落）</button>
       <button data-v="mail">メール本文</button>
+      <button data-v="norm">正規化した値</button>
       <button data-v="missing">要確認の値</button>
     </span>
   </div>
@@ -614,6 +615,23 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
       <div data-group-item="s06" data-v="xlsx pdf wtable wpara mail">
         <p class="meta">3行目 ｜ 型番 ｜ 確信が低い</p>
         <p style="font-size:var(--size-xl);font-weight:var(--weight-bold)">CB8-25 <span class="mark-low">低</span></p>
+        <p class="sub" style="margin-top:4px">確信が低い理由　<b style="color:var(--text-primary)">H1 ファイル間不一致</b>（仕様書.pdf では CB8-250）</p>
+      </div>
+      <div data-group-item="s06" data-v="norm" hidden>
+        <p class="meta">3行目 ｜ 納期 ｜ 確信が高い</p>
+        <p style="font-size:var(--size-md)"><span class="meta">原文</span>　<b style="font-size:var(--size-xl)">10月末</b></p>
+        <p style="font-size:var(--size-md)"><span class="meta">正規化後</span>　<b>2026-10-21〜2026-10-31</b> <span class="meta">（月内の範囲）</span></p>
+        <span class="loc" style="margin-top:10px">見積依頼.xlsx　明細!G12</span>
+        <div class="excerpt" style="margin-top:10px">
+          <table>
+            <thead><tr><th></th><th>E</th><th>F</th><th>G</th></tr></thead>
+            <tbody>
+              <tr><th>11</th><td></td><td>個</td><td>10/20</td></tr>
+              <tr><th>12</th><td>200</td><td>本</td><td class="hit">10月末</td></tr>
+              <tr><th>13</th><td>4</td><td>本</td><td>10月末</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div data-group-item="s06" data-v="missing" hidden>
         <p class="meta">1行目 ｜ 納期 ｜ 要確認</p>
@@ -832,6 +850,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
       <button class="on" data-v="timeout">タイムアウト</button>
       <button data-v="maxturn">最大ターン数超過</button>
       <button data-v="illegible">判読不能</button>
+      <button data-v="noitems">明細なし</button>
       <button data-v="retried">再実行後も打ち切り</button>
     </span>
   </div>
@@ -840,6 +859,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
     <div class="page-head"><div><a class="btn-ghost btn" href="#SCR-02">← 引合一覧</a>
       <h1 data-group-item="s10" data-v="timeout maxturn retried">顧客B社_引合明細.pdf</h1>
       <h1 data-group-item="s10" data-v="illegible" hidden>顧客C社_FAX.pdf</h1>
+      <h1 data-group-item="s10" data-v="noitems" hidden>メール本文「ご挨拶と今後のお見積りについて」</h1>
       <p class="meta">PDF ｜ 投入 09/12 09:40</p></div></div>
 
     <div class="banner banner-error" style="margin-bottom:16px">
@@ -847,10 +867,12 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
         <p class="error-text" data-group-item="s10" data-v="timeout">読み取り不可 — タイムアウト</p>
         <p class="error-text" data-group-item="s10" data-v="maxturn" hidden>読み取り不可 — 最大ターン数超過</p>
         <p class="error-text" data-group-item="s10" data-v="illegible" hidden>読み取り不可 — 判読不能</p>
+        <p class="error-text" data-group-item="s10" data-v="noitems" hidden>読み取り不可 — 明細なし</p>
         <p class="error-text" data-group-item="s10" data-v="retried" hidden>読み取り不可 — 再実行しても読み取れませんでした</p>
         <p class="sub" data-group-item="s10" data-v="timeout">時間内に読み取りが終わらなかったため、処理を打ち切りました。一時的な要因の可能性があります。</p>
         <p class="sub" data-group-item="s10" data-v="maxturn" hidden>決められた手順の回数内に読み取りが終わらなかったため、処理を打ち切りました。</p>
         <p class="sub" data-group-item="s10" data-v="illegible" hidden>文字として読み取れる情報がありません（手書き・FAX 由来のスキャンなど）。</p>
+        <p class="sub" data-group-item="s10" data-v="noitems" hidden>文字は読み取れましたが、品目の明細と判断できる部分が見つかりませんでした。添付を確認のうえ、明細を含むファイルを投入し直すか、今までどおり Excel に転記してください。</p>
         <p class="sub" data-group-item="s10" data-v="retried" hidden>再実行の結果も打ち切られたため、判読不能と同じ扱いにしました。</p>
       </div>
     </div>
@@ -876,7 +898,10 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
       <div data-group-item="s10" data-v="illegible" hidden>
         <p class="sub">顧客C社_FAX.pdf：読み取れた範囲はありません。</p>
       </div>
-      <p style="margin-top:14px;font-weight:var(--weight-medium)" data-group-item="s10" data-v="illegible retried" hidden>今までどおり Excel に転記してください。</p>
+      <div data-group-item="s10" data-v="noitems" hidden>
+        <p class="sub">メール本文（14 行）：すべて読み取りましたが、品目の明細はありませんでした。</p>
+      </div>
+      <p style="margin-top:14px;font-weight:var(--weight-medium)" data-group-item="s10" data-v="illegible noitems retried" hidden>今までどおり Excel に転記してください。</p>
     </div>
 
     <div class="actions">
@@ -884,7 +909,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
       <div class="spacer"></div>
       <span class="btn" data-group-item="s10" data-v="timeout maxturn">原本をダウンロード</span>
       <a class="btn btn-primary" href="#SCR-04" data-group-item="s10" data-v="timeout maxturn">再実行</a>
-      <span class="btn btn-primary" data-group-item="s10" data-v="illegible retried" hidden>原本をダウンロード</span>
+      <span class="btn btn-primary" data-group-item="s10" data-v="illegible noitems retried" hidden>原本をダウンロード</span>
     </div>
   </div>
 </section>
