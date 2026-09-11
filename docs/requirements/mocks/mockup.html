@@ -3,27 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>引合書整理 — モック（ワイヤーフレーム）</title>
+<title>引合書整理 — モック</title>
 <style>
 /* ============================================================
-   デザイントークン（ワイヤーフレーム段階: グレースケールの仮値）
-   確定後は 03-spec.md「3. デザイントークン」の値に差し替える。
+   デザイントークン — A案「検印」（確定）
+   値の真実源は 03-spec.md「3. デザイントークン」。ここはそのミラー。
+   変更は 03-spec と同時に、研修者の合意を得てから行う。
    ============================================================ */
 :root {
-  --main-100: #f0f0f0;
-  --main-300: #c8c8c8;
-  --main-500: #6e6e6e;
-  --main-700: #4a4a4a;
-  --main-900: #2a2a2a;
-  --background: #f6f6f6;
-  --surface: #fbfbfb;
-  --text-primary: #262626;
-  --text-secondary: #555555;
-  --text-meta: #8a8a8a;
-  --error: #262626;
+  /* 色: 色相は main（藍）と error（朱赤）の2つだけ */
+  --main-100: #EEF1F7;
+  --main-300: #B9C3D9;
+  --main-500: #4A5E8C;
+  --main-700: #2E3F66;
+  --main-900: #1B2641;
+  --background: #F6F7FA;
+  --surface: #FBFCFD;
+  --text-primary: #1F2330;
+  --text-secondary: #4B5163;
+  --text-meta: #62697D;
+  --error: #B3261E;
 
-  --font-heading: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
-  --font-body: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  /* タイポグラフィ: 族2つ・サイズ5種・ウェイト3種 */
+  --font-heading: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --font-body: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
   --size-xl: 22px;
   --size-lg: 18px;
   --size-md: 15px;
@@ -33,7 +36,8 @@
   --weight-medium: 600;
   --weight-bold: 700;
 
-  --radius: 4px;
+  /* 形状: 各1種類 */
+  --radius: 2px;
   --shadow: none;
   --border: 1px solid var(--main-300);
 }
@@ -99,7 +103,7 @@ a { color: var(--main-700); }
   max-width: 1120px; margin: 0 auto; padding: 10px 16px;
   display: flex; align-items: center; gap: 16px;
 }
-.brand { font-family: var(--font-heading); font-weight: var(--weight-bold); font-size: var(--size-md); }
+.brand { font-family: var(--font-heading); font-weight: var(--weight-bold); font-size: var(--size-md); color: var(--main-900); }
 .app-header .user { margin-left: auto; font-size: var(--size-sm); color: var(--text-secondary); }
 .page { max-width: 1120px; margin: 0 auto; padding: 20px 16px 0; }
 .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
@@ -138,9 +142,9 @@ textarea { min-height: 160px; resize: vertical; }
 .input[disabled] { color: var(--text-meta); }
 .hint { font-size: var(--size-xs); color: var(--text-meta); }
 
-/* エラー表示: ワイヤーフレームでは太枠＋「エラー」ラベルで区別する */
+/* エラー表示: error 色＋先頭の「！」で区別する（色だけに頼らない） */
 .error-text { font-size: var(--size-sm); color: var(--error); font-weight: var(--weight-medium); }
-.error-text::before { content: "エラー｜"; font-weight: var(--weight-bold); }
+.error-text::before { content: "！"; font-weight: var(--weight-bold); }
 .input.is-error { border: 2px solid var(--error); }
 .banner {
   border: var(--border); border-radius: var(--radius); background: var(--main-100);
@@ -156,7 +160,7 @@ textarea { min-height: 160px; resize: vertical; }
   white-space: nowrap;
 }
 .status-active { background: var(--main-700); color: var(--main-100); border-color: var(--main-700); }
-.status-error { border: 2px solid var(--error); }
+.status-error { border: 2px solid var(--error); color: var(--error); }
 .status-done { background: var(--main-100); }
 
 /* 表 */
@@ -174,7 +178,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* 値セル（クリックで読み取り元へ） */
 .val { border-bottom: 1px dotted var(--main-500); cursor: pointer; }
 .val-missing {
-  display: inline-block; padding: 0 6px; border: 1px dashed var(--main-700); border-radius: var(--radius);
+  display: inline-block; padding: 0 6px; border: 1px dashed var(--main-500); border-radius: var(--radius); color: var(--main-700);
   font-size: var(--size-xs); font-weight: var(--weight-medium);
 }
 .mark-low {
@@ -197,6 +201,15 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
 .file-chip.is-error { border: 2px solid var(--error); }
 .check { font-size: var(--size-xs); white-space: nowrap; }
 .check-done { color: var(--text-meta); }
+
+/* ---------- シグネチャ: 検印（確認済みの行・確定済みの表示にだけ使う） ---------- */
+.stamp {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; flex: none;
+  border: 1.5px solid var(--main-700); border-radius: 50%;
+  font-family: var(--font-heading); font-weight: var(--weight-bold); font-size: var(--size-xs);
+  color: var(--main-700); transform: rotate(-12deg); line-height: 1;
+}
+.stamp-lg { width: 40px; height: 40px; font-size: var(--size-sm); border-width: 2px; }
 
 .summary { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font-size: var(--size-sm); margin-bottom: 12px; }
 .summary b { font-size: var(--size-lg); }
@@ -309,7 +322,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
   <a href="#SCR-09">SCR-09 確定完了</a>
   <a href="#SCR-10">SCR-10 読み取り不可</a>
 </nav>
-<div class="mock-note">ワイヤーフレーム（構造・遷移の確認用）。色と装飾はまだ入れていない。データはすべてダミー。画面ごとの右上のボタンで、状態違いを切り替えられる。</div>
+<div class="mock-note">A案「検印」のデザイントークンを適用済み（値の正は 03-spec.md 3章）。データはすべてダミー。画面ごとの右上のボタンで、状態違いを切り替えられる。</div>
 
 <!-- ============================================================ SCR-01 -->
 <section class="screen" id="SCR-01">
@@ -510,7 +523,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
             <tbody>
               <tr class="group-row"><td colspan="11">要確認・確信が低い行（1行ずつ確認する）</td></tr>
               <tr>
-                <td class="check check-done">済</td><td class="cls">要確認</td><td>1</td>
+                <td class="check"><span class="stamp" title="確認済み">済</span></td><td class="cls">要確認</td><td>1</td>
                 <td><a class="val" href="#SCR-06">深溝玉軸受</a></td><td><a class="val" href="#SCR-06">6205ZZ</a></td>
                 <td class="num"><a class="val" href="#SCR-06">40</a></td><td><a class="val" href="#SCR-06">個</a></td>
                 <td><span class="val-missing">要確認</span></td><td></td>
@@ -785,7 +798,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
   <div class="screen-caption"><b>SCR-09 確定完了（確定済みの閲覧）</b><span>FUNC-06</span></div>
   <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
   <div class="page">
-    <div class="readonly-flag" style="margin-bottom:16px">確定済み・編集できません</div>
+    <div class="readonly-flag" style="margin-bottom:16px"><span class="stamp stamp-lg" title="確定済み">確定</span>確定済み・編集できません</div>
     <div class="page-head">
       <div><a class="btn-ghost btn" href="#SCR-02">← 引合一覧</a><h1>顧客D社_引合_0911.xlsx</h1>
         <p class="meta">確定 09/11 15:22 ｜ 確定者 中村 ｜ <b style="color:var(--text-primary)">要確認 1 行（顧客回答待ち）</b></p></div>
