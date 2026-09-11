@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>引合書整理 — モック（ワイヤーフレーム）</title>
+<style>
+/* ============================================================
+   デザイントークン（ワイヤーフレーム段階: グレースケールの仮値）
+   確定後は 03-spec.md「3. デザイントークン」の値に差し替える。
+   ============================================================ */
+:root {
+  --main-100: #f0f0f0;
+  --main-300: #c8c8c8;
+  --main-500: #6e6e6e;
+  --main-700: #4a4a4a;
+  --main-900: #2a2a2a;
+  --background: #f6f6f6;
+  --surface: #fbfbfb;
+  --text-primary: #262626;
+  --text-secondary: #555555;
+  --text-meta: #8a8a8a;
+  --error: #262626;
+
+  --font-heading: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-body: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --size-xl: 22px;
+  --size-lg: 18px;
+  --size-md: 15px;
+  --size-sm: 13px;
+  --size-xs: 11px;
+  --weight-regular: 400;
+  --weight-medium: 600;
+  --weight-bold: 700;
+
+  --radius: 4px;
+  --shadow: none;
+  --border: 1px solid var(--main-300);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--size-md);
+  line-height: 1.6;
+}
+h1, h2, h3 { font-family: var(--font-heading); margin: 0; line-height: 1.35; }
+h1 { font-size: var(--size-xl); font-weight: var(--weight-bold); }
+h2 { font-size: var(--size-lg); font-weight: var(--weight-bold); }
+h3 { font-size: var(--size-md); font-weight: var(--weight-medium); }
+p { margin: 0; }
+a { color: var(--main-700); }
+
+/* ---------- モック用ナビゲーション（製品UIではない） ---------- */
+.mock-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--main-900); color: var(--main-100);
+  padding: 8px 16px;
+  display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center;
+  font-size: var(--size-xs);
+}
+.mock-nav strong { margin-right: 8px; font-size: var(--size-sm); }
+.mock-nav a {
+  color: var(--main-100); text-decoration: none;
+  padding: 3px 8px; border: 1px solid var(--main-700); border-radius: var(--radius);
+}
+.mock-nav a.active { background: var(--main-100); color: var(--main-900); }
+.mock-note {
+  padding: 6px 16px; font-size: var(--size-xs); color: var(--text-secondary);
+  background: var(--main-100); border-bottom: var(--border);
+}
+
+/* ---------- 画面の注記（モック用） ---------- */
+.screen { padding: 0 0 48px; }
+.screen-caption {
+  margin: 16px auto 0; max-width: 1120px; padding: 0 16px;
+  font-size: var(--size-xs); color: var(--text-meta);
+  display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center;
+}
+.screen-caption b { color: var(--text-secondary); }
+.variants { display: inline-flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.variants button {
+  font: inherit; font-size: var(--size-xs); cursor: pointer;
+  background: var(--surface); color: var(--text-secondary);
+  border: var(--border); border-radius: var(--radius); padding: 2px 8px;
+}
+.variants button.on { background: var(--main-700); color: var(--main-100); border-color: var(--main-700); }
+
+/* ---------- アプリ共通 ---------- */
+.app-header {
+  background: var(--surface); border-bottom: var(--border);
+  margin-top: 8px;
+}
+.app-header .inner {
+  max-width: 1120px; margin: 0 auto; padding: 10px 16px;
+  display: flex; align-items: center; gap: 16px;
+}
+.brand { font-family: var(--font-heading); font-weight: var(--weight-bold); font-size: var(--size-md); }
+.app-header .user { margin-left: auto; font-size: var(--size-sm); color: var(--text-secondary); }
+.page { max-width: 1120px; margin: 0 auto; padding: 20px 16px 0; }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
+.page-head .spacer { flex: 1; }
+.meta { font-size: var(--size-sm); color: var(--text-meta); }
+.sub { font-size: var(--size-sm); color: var(--text-secondary); }
+
+.panel {
+  background: var(--surface); border: var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.panel-pad { padding: 20px; }
+
+.btn {
+  font: inherit; font-size: var(--size-sm); font-weight: var(--weight-medium);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius); cursor: pointer;
+  text-decoration: none; white-space: nowrap;
+  border: 1px solid var(--main-500); background: var(--surface); color: var(--main-900);
+}
+.btn-primary { background: var(--main-700); border-color: var(--main-700); color: var(--main-100); }
+.btn-ghost { border-color: transparent; background: transparent; color: var(--main-700); text-decoration: underline; padding-left: 4px; padding-right: 4px; }
+.btn[disabled], .btn.is-disabled { opacity: .45; cursor: not-allowed; }
+.btn-sm { padding: 4px 10px; font-size: var(--size-xs); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 20px; }
+.actions .spacer { flex: 1; }
+
+.field { display: grid; gap: 4px; margin-bottom: 14px; }
+.field label { font-size: var(--size-sm); font-weight: var(--weight-medium); }
+.input, textarea, select {
+  font: inherit; font-size: var(--size-md); color: var(--text-primary);
+  background: var(--background); border: var(--border); border-radius: var(--radius);
+  padding: 8px 10px; width: 100%;
+}
+textarea { min-height: 160px; resize: vertical; }
+.input[disabled] { color: var(--text-meta); }
+.hint { font-size: var(--size-xs); color: var(--text-meta); }
+
+/* エラー表示: ワイヤーフレームでは太枠＋「エラー」ラベルで区別する */
+.error-text { font-size: var(--size-sm); color: var(--error); font-weight: var(--weight-medium); }
+.error-text::before { content: "エラー｜"; font-weight: var(--weight-bold); }
+.input.is-error { border: 2px solid var(--error); }
+.banner {
+  border: var(--border); border-radius: var(--radius); background: var(--main-100);
+  padding: 10px 14px; font-size: var(--size-sm); display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+}
+.banner-error { border: 2px solid var(--error); background: var(--surface); }
+.banner-strong { border-width: 2px; border-color: var(--main-700); }
+
+/* 状況ラベル（5段階は文字で区別） */
+.status {
+  display: inline-block; font-size: var(--size-xs); font-weight: var(--weight-medium);
+  padding: 1px 8px; border-radius: var(--radius); border: var(--border); background: var(--surface);
+  white-space: nowrap;
+}
+.status-active { background: var(--main-700); color: var(--main-100); border-color: var(--main-700); }
+.status-error { border: 2px solid var(--error); }
+.status-done { background: var(--main-100); }
+
+/* 表 */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: var(--size-sm); }
+th, td { text-align: left; padding: 8px 10px; border-bottom: var(--border); vertical-align: middle; }
+th { font-size: var(--size-xs); color: var(--text-meta); font-weight: var(--weight-medium); background: var(--main-100); white-space: nowrap; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: var(--main-100); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.group-row td {
+  background: var(--main-100); font-size: var(--size-xs); font-weight: var(--weight-medium); color: var(--text-secondary);
+}
+
+/* 値セル（クリックで読み取り元へ） */
+.val { border-bottom: 1px dotted var(--main-500); cursor: pointer; }
+.val-missing {
+  display: inline-block; padding: 0 6px; border: 1px dashed var(--main-700); border-radius: var(--radius);
+  font-size: var(--size-xs); font-weight: var(--weight-medium);
+}
+.mark-low {
+  display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: var(--radius);
+  background: var(--main-900); color: var(--main-100); font-size: var(--size-xs); font-weight: var(--weight-bold);
+}
+.cls { font-size: var(--size-xs); white-space: nowrap; }
+.src-badge {
+  display: inline-block; font-size: var(--size-xs); white-space: nowrap; color: var(--text-secondary);
+  border: var(--border); border-radius: var(--radius); padding: 0 6px; background: var(--background);
+}
+.file-row td { padding: 6px 10px; }
+tr.row-excluded td { color: var(--text-meta); background: var(--main-100); }
+tr.row-excluded td .src-badge { color: var(--text-meta); }
+.files-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.file-chip {
+  display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: var(--size-sm);
+  border: var(--border); border-radius: var(--radius); background: var(--surface); padding: 6px 10px;
+}
+.file-chip.is-error { border: 2px solid var(--error); }
+.check { font-size: var(--size-xs); white-space: nowrap; }
+.check-done { color: var(--text-meta); }
+
+.summary { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font-size: var(--size-sm); margin-bottom: 12px; }
+.summary b { font-size: var(--size-lg); }
+.counter { font-size: var(--size-xs); color: var(--text-secondary); }
+
+/* 段階表示 */
+.stepper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 16px 0 8px; }
+.step { text-align: center; position: relative; padding-top: 28px; font-size: var(--size-sm); color: var(--text-meta); }
+.step::before {
+  content: ""; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--main-300); background: var(--surface);
+}
+.step::after {
+  content: ""; position: absolute; top: 15px; left: calc(50% + 10px); width: calc(100% - 20px); height: 2px; background: var(--main-300);
+}
+.step:last-child::after { display: none; }
+.step.done { color: var(--text-secondary); }
+.step.done::before { background: var(--main-500); border-color: var(--main-500); }
+.step.now { color: var(--text-primary); font-weight: var(--weight-bold); }
+.step.now::before { background: var(--main-900); border-color: var(--main-900); width: 18px; height: 18px; top: 6px; }
+.step.fail { color: var(--error); font-weight: var(--weight-bold); }
+.step.fail::before { border: 3px solid var(--error); }
+
+/* 重ねて開く画面（SCR-06・07） */
+.overlay-stage { position: relative; min-height: 640px; }
+.behind { opacity: .35; pointer-events: none; }
+.scrim { position: absolute; inset: 0; background: var(--main-900); opacity: .18; }
+.drawer {
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 100%);
+  background: var(--surface); border-left: var(--border); padding: 20px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.dialog {
+  position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
+  width: min(620px, calc(100% - 32px)); background: var(--surface);
+  border: var(--border); border-radius: var(--radius); padding: 20px;
+}
+.close { margin-left: auto; font-size: var(--size-sm); color: var(--text-secondary); cursor: pointer; }
+.loc {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: var(--size-md);
+  background: var(--main-100); border: var(--border); border-radius: var(--radius); padding: 6px 10px; display: inline-block;
+}
+.excerpt { border: var(--border); border-radius: var(--radius); overflow: hidden; }
+.excerpt table th, .excerpt table td { padding: 5px 8px; font-size: var(--size-xs); }
+.excerpt td.hit { outline: 2px solid var(--main-900); outline-offset: -2px; font-weight: var(--weight-bold); background: var(--main-100); }
+.excerpt .lines { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: var(--size-xs); padding: 8px 0; }
+.excerpt .lines div { padding: 1px 10px; display: flex; gap: 12px; }
+.excerpt .lines span.no { color: var(--text-meta); width: 2.5em; text-align: right; flex: none; }
+.excerpt .lines .hit { background: var(--main-100); outline: 2px solid var(--main-900); outline-offset: -2px; font-weight: var(--weight-bold); }
+.excerpt .pdf { padding: 12px; font-size: var(--size-sm); line-height: 1.9; }
+.excerpt .pdf mark { background: var(--main-100); outline: 2px solid var(--main-900); color: inherit; font-weight: var(--weight-bold); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.radio-row { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--size-sm); }
+.inline-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.inline-row .input { width: auto; flex: 1; min-width: 120px; }
+.orig { font-size: var(--size-xs); color: var(--text-meta); }
+.tag-scope3 {
+  display: inline-block; font-size: var(--size-xs); border: 1px dashed var(--main-500); border-radius: var(--radius);
+  padding: 0 6px; color: var(--text-secondary); margin-left: 6px;
+}
+.dropzone {
+  border: 2px dashed var(--main-300); border-radius: var(--radius); background: var(--background);
+  padding: 36px 16px; text-align: center; display: grid; gap: 6px; justify-items: center;
+}
+.dropzone.is-error { border-color: var(--error); }
+.tabs { display: flex; gap: 0; border-bottom: var(--border); margin-bottom: 16px; flex-wrap: wrap; }
+.tabs span {
+  padding: 8px 14px; font-size: var(--size-sm); color: var(--text-secondary); cursor: default;
+  border-bottom: 3px solid transparent; margin-bottom: -1px;
+}
+.tabs span.on { color: var(--text-primary); font-weight: var(--weight-bold); border-bottom-color: var(--main-900); }
+.tabs span em { font-style: normal; font-size: var(--size-xs); color: var(--text-meta); margin-left: 4px; }
+.sticky-foot {
+  position: sticky; bottom: 0; background: var(--surface); border-top: var(--border);
+  padding: 12px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 16px;
+}
+.sticky-foot .spacer { flex: 1; }
+.readonly-flag {
+  border: 2px solid var(--main-900); border-radius: var(--radius); padding: 10px 14px;
+  font-weight: var(--weight-bold); display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+}
+.login-wrap { min-height: 70vh; display: grid; place-items: center; padding: 24px 16px; }
+.login-card { width: min(380px, 100%); }
+.empty { padding: 32px 16px; text-align: center; color: var(--text-secondary); font-size: var(--size-sm); }
+.mail-text {
+  white-space: pre-wrap; font-size: var(--size-sm); background: var(--background); border: var(--border);
+  border-radius: var(--radius); padding: 12px; margin: 0; font-family: var(--font-body);
+}
+
+@media (max-width: 720px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .stepper { grid-template-columns: repeat(2, 1fr); row-gap: 12px; }
+  .step::after { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="mock-nav" aria-label="画面一覧（モック用）">
+  <strong>モック</strong>
+  <a href="#SCR-01">SCR-01 ログイン</a>
+  <a href="#SCR-02">SCR-02 引合一覧</a>
+  <a href="#SCR-03">SCR-03 投入</a>
+  <a href="#SCR-04">SCR-04 処理状況</a>
+  <a href="#SCR-05">SCR-05 確認</a>
+  <a href="#SCR-06">SCR-06 読み取り元</a>
+  <a href="#SCR-07">SCR-07 行の修正</a>
+  <a href="#SCR-08">SCR-08 要確認一覧</a>
+  <a href="#SCR-09">SCR-09 確定完了</a>
+  <a href="#SCR-10">SCR-10 読み取り不可</a>
+</nav>
+<div class="mock-note">ワイヤーフレーム（構造・遷移の確認用）。色と装飾はまだ入れていない。データはすべてダミー。画面ごとの右上のボタンで、状態違いを切り替えられる。</div>
+
+<!-- ============================================================ SCR-01 -->
+<section class="screen" id="SCR-01">
+  <div class="screen-caption"><b>SCR-01 ログイン</b><span>非機能・セキュリティ</span>
+    <span class="variants" data-group="s01">
+      <button class="on" data-v="normal">通常</button>
+      <button data-v="fail">認証失敗</button>
+      <button data-v="expired">期限切れ</button>
+    </span>
+  </div>
+  <div class="login-wrap">
+    <div class="panel panel-pad login-card">
+      <h1 style="margin-bottom:4px">引合書整理</h1>
+      <p class="sub" style="margin-bottom:20px">営業部 受注グループ</p>
+      <div data-group-item="s01" data-v="fail" hidden>
+        <div class="banner banner-error" style="margin-bottom:14px"><span class="error-text">ユーザーIDまたはパスワードが違います</span></div>
+      </div>
+      <div data-group-item="s01" data-v="expired" hidden>
+        <div class="banner" style="margin-bottom:14px">ログインの有効期限が切れました。もう一度ログインしてください</div>
+      </div>
+      <div class="field"><label>ユーザーID</label><input class="input" value="nakamura"></div>
+      <div class="field"><label>パスワード</label><input class="input" type="password" value="password"></div>
+      <a class="btn btn-primary" style="width:100%" href="#SCR-02">ログイン</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-02 -->
+<section class="screen" id="SCR-02" hidden>
+  <div class="screen-caption"><b>SCR-02 引合一覧</b><span>FUNC-03</span>
+    <span class="variants" data-group="s02">
+      <button class="on" data-v="list">案件あり</button>
+      <button data-v="empty">0件</button>
+    </span>
+  </div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="page">
+    <div class="page-head">
+      <div><h1>引合一覧</h1><p class="meta">行をクリックすると、状況に応じた画面が開きます</p></div>
+      <div class="spacer"></div>
+      <a class="btn btn-primary" href="#SCR-03">引合書を投入</a>
+    </div>
+    <div class="tabs">
+      <span class="on">すべて<em>6</em></span><span>受付済み<em>1</em></span><span>読み取り中<em>1</em></span><span>読み取り不可<em>1</em></span><span>確認待ち<em>2</em></span><span>確定済み<em>1</em></span>
+    </div>
+    <div class="panel" data-group-item="s02" data-v="list">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>投入日時</th><th>件名</th><th>形式</th><th>状況</th><th>補足</th><th>投入者</th></tr></thead>
+          <tbody>
+            <tr class="clickable" onclick="location.hash='SCR-04'"><td>09/12 10:02</td><td>お見積りのお願い（部品追加分）</td><td>メール本文</td><td><span class="status">受付済み</span></td><td class="meta">—</td><td>中村</td></tr>
+            <tr class="clickable" onclick="location.hash='SCR-04'"><td>09/12 09:40</td><td>顧客B社_引合明細.pdf</td><td>PDF</td><td><span class="status status-active">読み取り中</span></td><td>あと約2分</td><td>中村</td></tr>
+            <tr class="clickable" onclick="location.hash='SCR-05'"><td>09/12 09:14</td><td>見積依頼.xlsx <span class="meta">ほか1件</span></td><td>Excel＋PDF</td><td><span class="status">確認待ち</span></td><td>未確認 11 / 12 行</td><td>中村</td></tr>
+            <tr class="clickable" onclick="location.hash='SCR-05'"><td>09/12 08:52</td><td>部品手配ご依頼書.docx</td><td>Word</td><td><span class="status">確認待ち</span></td><td>未確認 8 / 8 行</td><td>佐藤</td></tr>
+            <tr class="clickable" onclick="location.hash='SCR-10'"><td>09/11 16:30</td><td>顧客C社_FAX.pdf</td><td>PDF</td><td><span class="status status-error">読み取り不可</span></td><td class="error-text">判読不能</td><td>佐藤</td></tr>
+            <tr class="clickable" onclick="location.hash='SCR-09'"><td>09/11 15:05</td><td>顧客D社_引合_0911.xlsx</td><td>Excel</td><td><span class="status status-done">確定済み</span></td><td>顧客回答待ち 1 行</td><td>中村</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel" data-group-item="s02" data-v="empty" hidden>
+      <div class="empty">まだ引合がありません。「引合書を投入」から始めてください。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-03 -->
+<section class="screen" id="SCR-03" hidden>
+  <div class="screen-caption"><b>SCR-03 引合書の投入</b><span>FUNC-01</span>
+    <span class="variants" data-group="s03">
+      <button class="on" data-v="ok">複数ファイル（受付可）</button>
+      <button data-v="ext">拒否: .xls</button>
+      <button data-v="size">拒否: 20MB超</button>
+      <button data-v="count">拒否: 件数・合計</button>
+      <button data-v="mail">メール本文だけ</button>
+    </span>
+  </div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="page" style="max-width:820px">
+    <div class="page-head"><div><a class="btn-ghost btn" href="#SCR-02">← 引合一覧</a><h1>引合書の投入</h1><p class="meta">1件の引合に届いた添付と本文を、まとめて投入します</p></div></div>
+    <div class="panel panel-pad">
+      <div class="dropzone">
+        <strong>ここにファイルをドラッグ、またはクリックして選ぶ（複数可）</strong>
+        <span class="hint">対応: .xlsx .pdf .docx ＋ メール本文　｜　最大10ファイル・合計50MB・1ファイル20MB</span>
+      </div>
+
+      <p class="error-text" style="margin-top:12px" data-group-item="s03" data-v="count" hidden>1件の引合に投入できるファイルは10件まで、合計50MBまでです（現在 11件・53.2MB）</p>
+      <div class="table-wrap" style="margin-top:12px" data-group-item="s03" data-v="ok ext size count">
+        <table>
+          <thead><tr><th>ファイル</th><th class="num">サイズ</th><th>判定結果</th><th></th></tr></thead>
+          <tbody>
+            <tr class="file-row"><td>見積依頼.xlsx</td><td class="num">184 KB</td><td><b>Excel形式として読みます</b></td><td><span class="btn btn-sm">取り消し</span></td></tr>
+            <tr class="file-row"><td>仕様書.pdf</td><td class="num">1.2 MB</td><td><b>PDF形式として読みます</b></td><td><span class="btn btn-sm">取り消し</span></td></tr>
+            <tr class="file-row" data-group-item="s03" data-v="ext" hidden><td>旧見積依頼.xls</td><td class="num">96 KB</td><td class="error-text">.xls（旧 Excel 形式）は扱えません。.xlsx で保存し直してください</td><td><span class="btn btn-sm">取り消し</span></td></tr>
+            <tr class="file-row" data-group-item="s03" data-v="count" hidden><td colspan="4" class="meta">… ほか 9 件（合計 11 件・53.2MB）</td></tr>
+            <tr class="file-row" data-group-item="s03" data-v="size" hidden><td>図面付き引合.pdf</td><td class="num">23.4 MB</td><td class="error-text">ファイルサイズが上限（20MB）を超えています（23.4MB）</td><td><span class="btn btn-sm">取り消し</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="sub" style="margin-top:12px" data-group-item="s03" data-v="mail" hidden>ファイルは選ばれていません</p>
+
+      <div class="field" style="margin-top:18px"><label>メール本文（任意）<span class="hint">　本文に明細が書かれている場合に貼り付ける</span></label>
+        <textarea class="input" data-group-item="s03" data-v="ok ext size count" placeholder="引合メールの本文を貼り付ける"></textarea>
+<textarea class="input" data-group-item="s03" data-v="mail" hidden>いつもお世話になっております。
+下記部品のお見積りをお願いいたします。
+
+・深溝玉軸受 6205ZZ　40個　10/20納期
+・Oリング P-20　（数量は追ってご連絡します）
+・六角穴付きボルト CB8-25　200本　10月末</textarea></div>
+      <div class="banner" data-group-item="s03" data-v="mail" hidden><strong>メール本文として読みます</strong><span class="meta">（12 行）</span></div>
+
+      <div class="actions">
+        <span class="error-text" data-group-item="s03" data-v="ext size count" hidden>受け付けられないファイルを取り消すと、投入できます</span>
+        <div class="spacer"></div>
+        <a class="btn" href="#SCR-02">キャンセル</a>
+        <a class="btn btn-primary" data-group-item="s03" data-v="ok mail" href="#SCR-04">投入する</a>
+        <span class="btn btn-primary is-disabled" data-group-item="s03" data-v="ext size count" hidden>投入する</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-04 -->
+<section class="screen" id="SCR-04" hidden>
+  <div class="screen-caption"><b>SCR-04 処理状況</b><span>FUNC-03 / FUNC-01 / FUNC-07</span>
+    <span class="variants" data-group="s04">
+      <button class="on" data-v="reading">読み取り中</button>
+      <button data-v="over">目安超過</button>
+      <button data-v="ready">確認待ち</button>
+      <button data-v="fail">読み取り不可</button>
+    </span>
+  </div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="page" style="max-width:860px">
+    <div class="page-head"><div><a class="btn-ghost btn" href="#SCR-02">← 引合一覧</a><h1>見積依頼.xlsx <span class="sub">ほか1件</span></h1><p class="meta">見積依頼.xlsx（Excel）・仕様書.pdf（PDF） ｜ 投入 09/12 09:14 ｜ 中村</p></div></div>
+    <div class="banner" style="margin-bottom:12px;display:block">見積依頼.xlsx を Excel形式として受け付けました<br>仕様書.pdf を PDF形式として受け付けました</div>
+    <div class="panel panel-pad">
+      <!-- 読み取り中 / 目安超過 -->
+      <div data-group-item="s04" data-v="reading over">
+        <div class="stepper">
+          <div class="step done">受付済み</div><div class="step now">読み取り中</div><div class="step">確認待ち</div><div class="step">確定済み</div>
+        </div>
+        <p style="text-align:center;margin-top:12px" data-group-item="s04" data-v="reading"><b style="font-size:var(--size-lg)">あと約2分</b><br><span class="meta">画面を離れても読み取りは続きます</span></p>
+        <p style="text-align:center;margin-top:12px" data-group-item="s04" data-v="over" hidden><b>目安の時間を過ぎていますが、処理を続けています</b><br><span class="meta">画面を離れても読み取りは続きます</span></p>
+        <div class="actions"><a class="btn" href="#SCR-02">一覧へ戻る</a></div>
+      </div>
+      <!-- 確認待ち -->
+      <div data-group-item="s04" data-v="ready" hidden>
+        <div class="stepper">
+          <div class="step done">受付済み</div><div class="step done">読み取り中</div><div class="step now">確認待ち</div><div class="step">確定済み</div>
+        </div>
+        <p style="text-align:center;margin-top:12px"><b>読み取りが終わりました</b><br><span class="meta">12 行 ｜ 要確認 2 ・ 確信が低い 1 ・ 確信が高い 9</span></p>
+        <div class="actions"><a class="btn" href="#SCR-02">一覧へ戻る</a><div class="spacer"></div><a class="btn btn-primary" href="#SCR-05">確認を始める</a></div>
+      </div>
+      <!-- 読み取り不可 -->
+      <div data-group-item="s04" data-v="fail" hidden>
+        <div class="stepper">
+          <div class="step done">受付済み</div><div class="step fail">読み取り不可</div><div class="step">確認待ち</div><div class="step">確定済み</div>
+        </div>
+        <div class="banner banner-error" style="margin-top:12px"><span class="error-text">読み取り不可 — タイムアウトで処理を打ち切りました</span><div class="spacer" style="flex:1"></div><a class="btn btn-sm" href="#SCR-10">詳細を見る</a></div>
+        <div class="actions"><a class="btn" href="#SCR-02">一覧へ戻る</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-05 -->
+<section class="screen" id="SCR-05" hidden>
+  <div class="screen-caption"><b>SCR-05 品目リストの確認</b><span>FUNC-04 / FUNC-05 / FUNC-06</span>
+    <span class="variants" data-group="s05">
+      <button class="on" data-v="work">確認中</button>
+      <button data-v="partial">一部のファイルが読めない</button>
+      <button data-v="confirm">確定の確認ダイアログ</button>
+    </span>
+  </div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="overlay-stage">
+    <div class="page">
+      <div class="page-head">
+        <div><a class="btn-ghost btn" href="#SCR-02">← 引合一覧</a><h1>見積依頼.xlsx <span class="sub" data-group-item="s05" data-v="work confirm">ほか1件</span><span class="sub" data-group-item="s05" data-v="partial" hidden>ほか2件</span></h1><p class="meta">投入 09/12 09:14 ｜ 確認待ち</p></div>
+        <div class="spacer"></div>
+        <div style="text-align:right"><span class="meta">未確認</span><br><b style="font-size:var(--size-xl)">11</b><span class="sub"> / 全 13 行（除外 1）</span></div>
+      </div>
+      <div class="files-strip">
+        <span class="file-chip">見積依頼.xlsx <span class="meta">Excel ｜ 11 行を読み取りました</span></span>
+        <span class="file-chip">仕様書.pdf <span class="meta">PDF ｜ 2 行を読み取りました</span></span>
+        <span class="file-chip is-error" data-group-item="s05" data-v="partial" hidden>図面.pdf <span class="error-text">読み取れませんでした（判読不能）</span><span class="btn btn-sm">除外</span></span>
+      </div>
+      <div class="summary">
+        <span>要確認 <b>2</b></span><span>確信が低い <b>1</b></span><span>確信が高い <b>9</b></span>
+        <span class="spacer" style="flex:1"></span>
+        <a class="btn btn-sm" href="#SCR-08">要確認一覧（3 項目）</a>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>確認</th><th>分類</th><th>#</th><th>品目名</th><th>型番</th><th class="num">数量</th><th>単位</th><th>納期</th><th>備考</th><th>読み取り元</th><th></th></tr></thead>
+            <tbody>
+              <tr class="group-row"><td colspan="11">要確認・確信が低い行（1行ずつ確認する）</td></tr>
+              <tr>
+                <td class="check check-done">済</td><td class="cls">要確認</td><td>1</td>
+                <td><a class="val" href="#SCR-06">深溝玉軸受</a></td><td><a class="val" href="#SCR-06">6205ZZ</a></td>
+                <td class="num"><a class="val" href="#SCR-06">40</a></td><td><a class="val" href="#SCR-06">個</a></td>
+                <td><span class="val-missing">要確認</span></td><td></td>
+                <td><span class="src-badge">見積依頼.xlsx</span></td>
+                <td style="white-space:nowrap"><a class="btn btn-sm" href="#SCR-07">修正</a> <span class="btn btn-sm">除外</span></td>
+              </tr>
+              <tr>
+                <td class="check">未</td><td class="cls">要確認</td><td>2</td>
+                <td><a class="val" href="#SCR-06">Oリング</a></td><td><a class="val" href="#SCR-06">P-20</a></td>
+                <td class="num"><span class="val-missing">要確認</span></td><td><span class="val-missing">要確認</span></td>
+                <td><a class="val" href="#SCR-06">2026-10-20</a></td><td><a class="val" href="#SCR-06">NBR</a></td>
+                <td><span class="src-badge">見積依頼.xlsx ＋1</span></td>
+                <td style="white-space:nowrap"><span class="btn btn-sm">確認済みにする</span> <a class="btn btn-sm" href="#SCR-07">修正</a> <span class="btn btn-sm">除外</span></td>
+              </tr>
+              <tr>
+                <td class="check">未</td><td class="cls">確信が低い</td><td>3</td>
+                <td><a class="val" href="#SCR-06">六角穴付きボルト</a></td><td><a class="val" href="#SCR-06">CB8-25</a><span class="mark-low">低</span></td>
+                <td class="num"><a class="val" href="#SCR-06">200</a></td><td><a class="val" href="#SCR-06">本</a></td>
+                <td><a class="val" href="#SCR-06">10月末</a> <span class="meta">(10/21〜10/31)</span></td><td></td>
+                <td><span class="src-badge">見積依頼.xlsx</span></td>
+                <td style="white-space:nowrap"><span class="btn btn-sm">確認済みにする</span> <a class="btn btn-sm" href="#SCR-07">修正</a> <span class="btn btn-sm">除外</span></td>
+              </tr>
+              <tr class="group-row"><td colspan="11">
+                <span class="inline-row">確信が高い行 9 行
+                  <span class="counter">読み取り元を開いた行 1 / 3　—　あと 2 行、読み取り元を開いてください</span>
+                  <span class="btn btn-sm is-disabled">まとめて確認済みにする</span></span>
+              </td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>4</td><td><a class="val" href="#SCR-06">リニアガイド</a></td><td><a class="val" href="#SCR-06">LG-15-400</a></td><td class="num">4</td><td>本</td><td>10月末 <span class="meta">(10/21〜10/31)</span></td><td></td><td><span class="src-badge">見積依頼.xlsx</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>5</td><td><a class="val" href="#SCR-06">エアシリンダ</a></td><td><a class="val" href="#SCR-06">CA-32-100</a></td><td class="num">6</td><td>個</td><td>2026-10-20</td><td></td><td><span class="src-badge">見積依頼.xlsx</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>6</td><td><a class="val" href="#SCR-06">近接センサ</a></td><td><a class="val" href="#SCR-06">PX-M12-4N</a></td><td class="num">10</td><td>個</td><td>2026-10-20</td><td></td><td><span class="src-badge">見積依頼.xlsx</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>7</td><td><a class="val" href="#SCR-06">ソレノイドバルブ</a></td><td><a class="val" href="#SCR-06">SV-24D-02</a></td><td class="num">6</td><td>個</td><td>2026-10-24</td><td></td><td><span class="src-badge">見積依頼.xlsx</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>8</td><td><a class="val" href="#SCR-06">タイミングベルト</a></td><td><a class="val" href="#SCR-06">TB-S3M-600</a></td><td class="num">2</td><td>本</td><td>2026-10-24</td><td></td><td><span class="src-badge">見積依頼.xlsx</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>9</td><td><a class="val" href="#SCR-06">カップリング</a></td><td><a class="val" href="#SCR-06">CP-20-12x14</a></td><td class="num">4</td><td>個</td><td>2026-10-31</td><td></td><td><span class="src-badge">見積依頼.xlsx</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>10</td><td><a class="val" href="#SCR-06">スプリングワッシャ</a></td><td><a class="val" href="#SCR-06">SW-M8</a></td><td class="num">3</td><td>箱</td><td>2026-10-20</td><td>1箱200個</td><td><span class="src-badge">見積依頼.xlsx</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>11</td><td><a class="val" href="#SCR-06">平行キー</a></td><td><a class="val" href="#SCR-06">PK-5x5x20</a></td><td class="num">20</td><td>個</td><td>2026-10-20</td><td></td><td><span class="src-badge">見積依頼.xlsx</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr><td class="check">未</td><td class="cls">確信が高い</td><td>12</td><td><a class="val" href="#SCR-06">ケーブルグランド</a></td><td><a class="val" href="#SCR-06">CG-16</a></td><td class="num">12</td><td>個</td><td>2026-10-24</td><td></td><td><span class="src-badge">仕様書.pdf</span></td><td><span class="btn btn-sm">除外</span></td></tr>
+              <tr class="group-row"><td colspan="11">除外した行（Excel に出力しない）</td></tr>
+              <tr class="row-excluded"><td class="check">除外</td><td class="cls">—</td><td>13</td><td>六角穴付きボルト</td><td>CB8-25</td><td class="num">200</td><td>本</td><td>10月末</td><td></td><td><span class="src-badge">仕様書.pdf</span></td><td><span class="btn btn-sm">取り消し</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="sticky-foot">
+        <span class="sub">値をクリックすると、読み取り元が開きます</span>
+        <div class="spacer"></div>
+        <span class="error-text">未確認の行が 11 行あります</span><a class="btn-ghost btn btn-sm" href="#SCR-05">未確認の先頭行へ</a>
+        <span class="error-text" data-group-item="s05" data-v="partial" hidden>読み取れなかったファイルが 1 件あります。除外すると確定できます</span>
+        <span class="btn btn-primary is-disabled" data-group-item="s05" data-v="work partial">確定する</span>
+        <span class="btn btn-primary" data-group-item="s05" data-v="confirm" hidden>確定する</span>
+      </div>
+    </div>
+    <!-- 確定の確認ダイアログ -->
+    <div data-group-item="s05" data-v="confirm" hidden>
+      <div class="scrim"></div>
+      <div class="dialog">
+        <h2 style="margin-bottom:10px">この内容で確定しますか</h2>
+        <p>確定すると編集できません。</p>
+        <p style="margin-top:6px">要確認 <b>2 行</b>は「顧客回答待ち」として出力されます。除外した <b>1 行</b>は出力しません。</p>
+        <p class="meta" style="margin-top:6px">（モックでは説明のため未確認が残った状態で表示している。実際は未確認0のときだけ開く）</p>
+        <div class="actions"><div class="spacer"></div><a class="btn" href="#SCR-05">戻る</a><a class="btn btn-primary" href="#SCR-09">確定する</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-06 -->
+<section class="screen" id="SCR-06" hidden>
+  <div class="screen-caption"><b>SCR-06 読み取り元パネル</b><span>FUNC-04（SCR-05 に重ねて開く）</span>
+    <span class="variants" data-group="s06">
+      <button class="on" data-v="xlsx">Excel</button>
+      <button data-v="pdf">PDF</button>
+      <button data-v="wtable">Word（表）</button>
+      <button data-v="wpara">Word（段落）</button>
+      <button data-v="mail">メール本文</button>
+      <button data-v="missing">要確認の値</button>
+    </span>
+  </div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="overlay-stage">
+    <div class="page behind">
+      <div class="page-head"><div><h1>見積依頼.xlsx <span class="sub">ほか1件</span></h1><p class="meta">SCR-05 品目リストの確認（背面）</p></div></div>
+      <div class="panel panel-pad" style="height:520px"></div>
+    </div>
+    <div class="scrim"></div>
+    <aside class="drawer">
+      <div class="inline-row"><h2>読み取り元</h2><a class="close" href="#SCR-05">閉じる ✕</a></div>
+
+      <div data-group-item="s06" data-v="xlsx pdf wtable wpara mail">
+        <p class="meta">3行目 ｜ 型番 ｜ 確信が低い</p>
+        <p style="font-size:var(--size-xl);font-weight:var(--weight-bold)">CB8-25 <span class="mark-low">低</span></p>
+      </div>
+      <div data-group-item="s06" data-v="missing" hidden>
+        <p class="meta">1行目 ｜ 納期 ｜ 要確認</p>
+        <p style="font-size:var(--size-xl);font-weight:var(--weight-bold)"><span class="val-missing" style="font-size:var(--size-md)">要確認</span></p>
+      </div>
+
+      <!-- Excel -->
+      <div data-group-item="s06" data-v="xlsx">
+        <span class="loc">見積依頼.xlsx　明細!C12</span>
+        <div class="excerpt" style="margin-top:10px">
+          <table>
+            <thead><tr><th></th><th>B</th><th>C</th><th>D</th><th>E</th></tr></thead>
+            <tbody>
+              <tr><th>10</th><td>1</td><td>6205ZZ</td><td>深溝玉軸受</td><td>40</td></tr>
+              <tr><th>11</th><td>2</td><td>P-20</td><td>Oリング NBR</td><td></td></tr>
+              <tr><th>12</th><td>3</td><td class="hit">CB8-25</td><td>六角穴付きボルト</td><td>200</td></tr>
+              <tr><th>13</th><td>4</td><td>LG-15-400</td><td>リニアガイド</td><td>4</td></tr>
+              <tr><th>14</th><td>5</td><td>CA-32-100</td><td>エアシリンダ</td><td>6</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- PDF -->
+      <div data-group-item="s06" data-v="pdf" hidden>
+        <span class="loc">仕様書.pdf　p.2</span> <span class="sub">明細表の3行目</span>
+        <div class="excerpt" style="margin-top:10px">
+          <div class="pdf">… 2　Oリング　P-20　NBR　—　10/20<br>3　六角穴付きボルト　<mark>CB8-25</mark>　200　本　10月末<br>4　リニアガイド　LG-15-400　4　本　10月末 …</div>
+        </div>
+      </div>
+      <!-- Word（表） -->
+      <div data-group-item="s06" data-v="wtable" hidden>
+        <span class="loc">依頼書.docx　表2 3行目2列目</span>
+        <div class="excerpt" style="margin-top:10px">
+          <table>
+            <thead><tr><th>表2</th><th>1列目 品名</th><th>2列目 型式</th><th>3列目 数量</th></tr></thead>
+            <tbody>
+              <tr><th>2行目</th><td>Oリング</td><td>P-20</td><td>—</td></tr>
+              <tr><th>3行目</th><td>六角穴付きボルト</td><td class="hit">CB8-25</td><td>200本</td></tr>
+              <tr><th>4行目</th><td>リニアガイド</td><td>LG-15-400</td><td>4本</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Word（段落） -->
+      <div data-group-item="s06" data-v="wpara" hidden>
+        <span class="loc">依頼書.docx　12段落目</span>
+        <div class="excerpt" style="margin-top:10px">
+          <div class="lines">
+            <div><span class="no">¶11</span><span>つきましては、下記の部品について御見積をお願い申し上げます。</span></div>
+            <div class="hit"><span class="no">¶12</span><span>六角穴付きボルト（型式 CB8-25）を200本、10月末までに納入願います。</span></div>
+            <div><span class="no">¶13</span><span>なお、数量が変わる場合は追ってご連絡いたします。</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- メール -->
+      <div data-group-item="s06" data-v="mail" hidden>
+        <span class="loc">本文　14行目</span>
+        <div class="excerpt" style="margin-top:10px">
+          <div class="lines">
+            <div><span class="no">12</span><span>・深溝玉軸受 6205ZZ　40個</span></div>
+            <div><span class="no">13</span><span>・Oリング P-20（数量は追ってご連絡します）</span></div>
+            <div class="hit"><span class="no">14</span><span>・六角穴付きボルト CB8-25　200本　10月末</span></div>
+            <div><span class="no">15</span><span>・リニアガイド LG-15-400　4本</span></div>
+            <div><span class="no">16</span><span>以上、よろしくお願いいたします。</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- 要確認 -->
+      <div data-group-item="s06" data-v="missing" hidden>
+        <div class="banner">引合書に記載がありません（要確認）</div>
+      </div>
+
+      <div class="inline-row" style="font-size:var(--size-sm)">
+        <a class="btn btn-sm" href="#SCR-06">← 前の値</a><a class="btn btn-sm" href="#SCR-06">次の値 →</a>
+      </div>
+      <div class="actions" style="margin-top:auto">
+        <a class="btn" href="#SCR-07">修正する</a><div class="spacer"></div><a class="btn btn-primary" href="#SCR-05">この行を確認済みにする</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-07 -->
+<section class="screen" id="SCR-07" hidden>
+  <div class="screen-caption"><b>SCR-07 行の修正</b><span>FUNC-05（SCR-05 に重ねて開く）</span>
+    <span class="variants" data-group="s07">
+      <button class="on" data-v="edit">入力中</button>
+      <button data-v="err">検査エラー</button>
+    </span>
+  </div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="overlay-stage" style="min-height:760px">
+    <div class="page behind">
+      <div class="page-head"><div><h1>見積依頼.xlsx <span class="sub">ほか1件</span></h1><p class="meta">SCR-05 品目リストの確認（背面）</p></div></div>
+      <div class="panel panel-pad" style="height:620px"></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="dialog">
+      <div class="inline-row" style="margin-bottom:14px"><h2>3行目を修正</h2><a class="btn-ghost btn btn-sm" href="#SCR-06">読み取り元を見る</a><a class="close" href="#SCR-05">✕</a></div>
+      <div class="grid-2">
+        <div class="field"><label>品目名</label><input class="input" value="六角穴付きボルト"><span class="orig">抽出時: 六角穴付きボルト</span></div>
+        <div class="field"><label>型番 <span class="mark-low">低</span></label>
+          <div class="inline-row"><input class="input" value="CB8-25"><label class="hint"><input type="checkbox"> 要確認にする</label></div>
+          <span class="orig">抽出時: CB8-25</span></div>
+        <div class="field"><label>数量</label>
+          <div class="inline-row"><input class="input" value="200" data-group-item="s07" data-v="edit"><input class="input is-error" value="2OO" data-group-item="s07" data-v="err" hidden><label class="hint"><input type="checkbox"> 要確認にする</label></div>
+          <span class="error-text" data-group-item="s07" data-v="err" hidden>数量は数値で入力してください</span>
+          <span class="orig">抽出時: 200</span></div>
+        <div class="field"><label>単位</label>
+          <div class="inline-row"><input class="input" value="本"><label class="hint"><input type="checkbox"> 要確認にする</label></div>
+          <span class="orig">抽出時: 本</span></div>
+      </div>
+      <div class="field"><label>納期</label>
+        <div class="radio-row">
+          <label><input type="radio" name="due"> (a) 確定日付</label>
+          <label><input type="radio" name="due" checked> (b) 月内の範囲</label>
+          <label><input type="radio" name="due"> (c) 要確認</label>
+        </div>
+        <div class="inline-row" data-group-item="s07" data-v="edit"><input class="input" value="2026-10-21"><span>〜</span><input class="input" value="2026-10-31"></div>
+        <div class="inline-row" data-group-item="s07" data-v="err" hidden><input class="input is-error" value="2026-10-21"><span>〜</span><input class="input is-error" value="2026-11-05"></div>
+        <span class="error-text" data-group-item="s07" data-v="err" hidden>範囲は同じ月の中で、開始日を終了日以前にしてください</span>
+        <span class="orig">抽出時: 10月末（2026-10-21〜2026-10-31）</span>
+      </div>
+      <div class="field"><label>備考（任意）</label><input class="input" value=""></div>
+      <div class="actions"><a class="btn" href="#SCR-05">この行を除外する</a><div class="spacer"></div><a class="btn" href="#SCR-05">キャンセル</a>
+        <a class="btn btn-primary" href="#SCR-05" data-group-item="s07" data-v="edit">保存する</a>
+        <span class="btn btn-primary is-disabled" data-group-item="s07" data-v="err" hidden>保存する</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-08 -->
+<section class="screen" id="SCR-08" hidden>
+  <div class="screen-caption"><b>SCR-08 要確認一覧</b><span>FUNC-05 / FUNC-09（Scope 3）</span>
+    <span class="variants" data-group="s08">
+      <button class="on" data-v="list">要確認あり</button>
+      <button data-v="text">文面を作った後</button>
+      <button data-v="none">0件</button>
+    </span>
+  </div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="page" style="max-width:860px">
+    <div class="page-head"><div><a class="btn-ghost btn" href="#SCR-05">← 確認画面へ戻る</a><h1>要確認一覧</h1><p class="meta">見積依頼.xlsx ほか1件</p></div></div>
+    <div data-group-item="s08" data-v="list text">
+      <p style="margin-bottom:12px">要確認 <b>3 項目</b>（2 行）</p>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>行</th><th>品目名</th><th>型番</th><th>不足している項目</th><th>ファイル</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="location.hash='SCR-05'"><td>1</td><td>深溝玉軸受</td><td>6205ZZ</td><td>納期</td><td><span class="src-badge">見積依頼.xlsx</span></td></tr>
+              <tr class="clickable" onclick="location.hash='SCR-05'"><td>2</td><td>Oリング</td><td>P-20</td><td>数量・単位</td><td><span class="src-badge">見積依頼.xlsx</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel panel-pad" style="margin-top:16px">
+        <div class="inline-row"><h3>問い合わせ文面</h3><span class="tag-scope3">Scope 3</span><div class="spacer" style="flex:1"></div>
+          <span class="btn btn-sm" data-group-item="s08" data-v="list">文面を作る</span>
+          <span class="btn btn-sm" data-group-item="s08" data-v="text" hidden>コピー</span>
+        </div>
+        <p class="meta" style="margin-top:6px" data-group-item="s08" data-v="list">要確認の全項目を含む1通分の文面を作ります。送信はしません（メールで手作業で送る）。</p>
+<pre class="mail-text" style="margin-top:10px" data-group-item="s08" data-v="text" hidden>いつもお世話になっております。
+9月12日にいただいたお見積りのご依頼について、以下の点をご教示ください。
+
+1. 深溝玉軸受（型番 6205ZZ）: 納期
+2. Oリング（型番 P-20）: 数量・単位
+
+お手数をおかけしますが、よろしくお願いいたします。</pre>
+      </div>
+    </div>
+    <div class="panel" data-group-item="s08" data-v="none" hidden>
+      <div class="empty">要確認の項目はありません。</div>
+      <div style="padding:0 16px 16px;text-align:center"><span class="btn btn-sm is-disabled">文面を作る</span> <span class="tag-scope3">Scope 3</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-09 -->
+<section class="screen" id="SCR-09" hidden>
+  <div class="screen-caption"><b>SCR-09 確定完了（確定済みの閲覧）</b><span>FUNC-06</span></div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="page">
+    <div class="readonly-flag" style="margin-bottom:16px">確定済み・編集できません</div>
+    <div class="page-head">
+      <div><a class="btn-ghost btn" href="#SCR-02">← 引合一覧</a><h1>顧客D社_引合_0911.xlsx</h1>
+        <p class="meta">確定 09/11 15:22 ｜ 確定者 中村 ｜ <b style="color:var(--text-primary)">要確認 1 行（顧客回答待ち）</b></p></div>
+      <div class="spacer"></div>
+      <div style="text-align:right">
+        <span class="btn btn-primary">品目リスト（Excel）をダウンロード</span>
+        <p class="hint" style="margin-top:6px;max-width:300px">ダウンロードした Excel を、これまでと同じ方法で購買部門に渡してください</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>品目名</th><th>型番</th><th class="num">数量</th><th>単位</th><th>納期</th><th>備考</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>ボールねじ</td><td>BS-1605-300</td><td class="num">2</td><td>本</td><td>2026-10-15</td><td></td></tr>
+            <tr><td>2</td><td>ピロー形ユニット</td><td>UCP205</td><td class="num"><span class="val-missing">顧客回答待ち</span></td><td>個</td><td>2026-10-15</td><td></td></tr>
+            <tr><td>3</td><td>チェーン</td><td>RS40-1-100L</td><td class="num">1</td><td>本</td><td>10月末 <span class="meta">(10/21〜10/31)</span></td><td>継手リンク付き</td></tr>
+            <tr><td>4</td><td>スプロケット</td><td>40B15</td><td class="num">2</td><td>個</td><td>2026-10-15</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="actions"><a class="btn" href="#SCR-02">一覧へ戻る</a></div>
+  </div>
+</section>
+
+<!-- ============================================================ SCR-10 -->
+<section class="screen" id="SCR-10" hidden>
+  <div class="screen-caption"><b>SCR-10 読み取り不可</b><span>FUNC-07</span>
+    <span class="variants" data-group="s10">
+      <button class="on" data-v="timeout">タイムアウト</button>
+      <button data-v="maxturn">最大ターン数超過</button>
+      <button data-v="illegible">判読不能</button>
+      <button data-v="retried">再実行後も打ち切り</button>
+    </span>
+  </div>
+  <header class="app-header"><div class="inner"><span class="brand">引合書整理</span><span class="user">中村（営業事務）　<a href="#SCR-01">ログアウト</a></span></div></header>
+  <div class="page" style="max-width:860px">
+    <div class="page-head"><div><a class="btn-ghost btn" href="#SCR-02">← 引合一覧</a>
+      <h1 data-group-item="s10" data-v="timeout maxturn retried">顧客B社_引合明細.pdf</h1>
+      <h1 data-group-item="s10" data-v="illegible" hidden>顧客C社_FAX.pdf</h1>
+      <p class="meta">PDF ｜ 投入 09/12 09:40</p></div></div>
+
+    <div class="banner banner-error" style="margin-bottom:16px">
+      <div>
+        <p class="error-text" data-group-item="s10" data-v="timeout">読み取り不可 — タイムアウト</p>
+        <p class="error-text" data-group-item="s10" data-v="maxturn" hidden>読み取り不可 — 最大ターン数超過</p>
+        <p class="error-text" data-group-item="s10" data-v="illegible" hidden>読み取り不可 — 判読不能</p>
+        <p class="error-text" data-group-item="s10" data-v="retried" hidden>読み取り不可 — 再実行しても読み取れませんでした</p>
+        <p class="sub" data-group-item="s10" data-v="timeout">時間内に読み取りが終わらなかったため、処理を打ち切りました。一時的な要因の可能性があります。</p>
+        <p class="sub" data-group-item="s10" data-v="maxturn" hidden>決められた手順の回数内に読み取りが終わらなかったため、処理を打ち切りました。</p>
+        <p class="sub" data-group-item="s10" data-v="illegible" hidden>文字として読み取れる情報がありません（手書き・FAX 由来のスキャンなど）。</p>
+        <p class="sub" data-group-item="s10" data-v="retried" hidden>再実行の結果も打ち切られたため、判読不能と同じ扱いにしました。</p>
+      </div>
+    </div>
+
+    <div class="panel panel-pad">
+      <h3 style="margin-bottom:8px">読めた範囲</h3>
+      <div data-group-item="s10" data-v="timeout maxturn retried">
+        <p class="sub" style="margin-bottom:10px">顧客B社_引合明細.pdf：明細の5行目まで読み取り、6行目以降は読めませんでした。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>品目名</th><th>型番</th><th class="num">数量</th><th>単位</th><th>納期</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>リニアブッシュ</td><td>LB-12UU</td><td class="num">8</td><td>個</td><td>2026-10-18</td></tr>
+              <tr><td>2</td><td>シャフト</td><td>SF-12-300</td><td class="num">4</td><td>本</td><td>2026-10-18</td></tr>
+              <tr><td>3</td><td>シャフトホルダ</td><td>SH-12</td><td class="num">8</td><td>個</td><td>2026-10-18</td></tr>
+              <tr><td>4</td><td>ストッパ</td><td>ST-12</td><td class="num">8</td><td>個</td><td>2026-10-18</td></tr>
+              <tr><td>5</td><td>止め輪</td><td>RTW-12</td><td class="num">2</td><td>袋</td><td>2026-10-18</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint" style="margin-top:8px">読めた範囲は参考表示です。ここから入力を続けることはできません。</p>
+      </div>
+      <div data-group-item="s10" data-v="illegible" hidden>
+        <p class="sub">顧客C社_FAX.pdf：読み取れた範囲はありません。</p>
+      </div>
+      <p style="margin-top:14px;font-weight:var(--weight-medium)" data-group-item="s10" data-v="illegible retried" hidden>今までどおり Excel に転記してください。</p>
+    </div>
+
+    <div class="actions">
+      <a class="btn" href="#SCR-02">一覧へ戻る</a>
+      <div class="spacer"></div>
+      <span class="btn" data-group-item="s10" data-v="timeout maxturn">原本をダウンロード</span>
+      <a class="btn btn-primary" href="#SCR-04" data-group-item="s10" data-v="timeout maxturn">再実行</a>
+      <span class="btn btn-primary" data-group-item="s10" data-v="illegible retried" hidden>原本をダウンロード</span>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var screens = Array.prototype.slice.call(document.querySelectorAll('section.screen'));
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.mock-nav a'));
+
+  function show(id) {
+    var found = screens.some(function (s) { return s.id === id; });
+    if (!found) id = 'SCR-01';
+    screens.forEach(function (s) { s.hidden = s.id !== id; });
+    navLinks.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + id); });
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
+  show(location.hash.slice(1));
+
+  // 状態違いの切り替え（モック用）
+  document.querySelectorAll('.variants').forEach(function (group) {
+    var name = group.getAttribute('data-group');
+    group.addEventListener('click', function (e) {
+      var btn = e.target.closest('button');
+      if (!btn) return;
+      var v = btn.getAttribute('data-v');
+      group.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b === btn); });
+      document.querySelectorAll('[data-group-item="' + name + '"]').forEach(function (el) {
+        var list = el.getAttribute('data-v').split(' ');
+        el.hidden = list.indexOf(v) === -1;
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
