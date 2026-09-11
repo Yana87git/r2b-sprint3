@@ -61,7 +61,7 @@ Sprint3 画面のタブがそのまま進捗の定義になっている。**合�
 
 ### Sprint2 との違い（3点だけ）
 
-1. インフラ設計（07-infra）が**ない**。代わりに **`agent-plan.md`（エージェント設計）**が設計の背骨になる
+1. インフラ設計（07-infra）が**ない**。代わりに **`agent.md`（エージェント設計）**が設計の背骨になる
 2. フロントが React+Vite → **Next.js 15**。CORS のポートが 5173 → **3000**
 3. Backend の Python 環境は **uv に統一**（`python -m venv` は使わない。`uv run` を頭に付けるだけ）
 
@@ -94,7 +94,7 @@ Sprint3 画面のタブがそのまま進捗の定義になっている。**合�
 | **M3** | **9/16（水）** | Design クイズ完了 | Problem / Product / Architecture の3種すべて 10/10 | 🟡 並行可 |
 | **M4** | **9/18（金）** | Foundation 完了 | Slice 0-1〜0-7（**平日夜4枠のみ**）。**0-7 の疎通テストが通り、`backend/traces/` にトレースが出る** | 🔴 必須 |
 | **M5** | **9/21（月）** | build-loop 初版完成 | `.claude/memory.md` の全スライスが DONE。エージェントがローカルで動く | 🔴 必須 |
-| **M6** | **9/22（火）** | エージェント評価 Pass ＋ Build クイズ | `06-scenario-test.md` の正常系・異常系を実行し、トレースと `agent-plan.md` の完了条件が一致／**Build クイズ 30/30** | 🔴 必須 |
+| **M6** | **9/22（火）** | エージェント評価 Pass ＋ Build クイズ | `06-scenario-test.md` の正常系・異常系を実行し、トレースと `agent.md` の完了条件が一致／**Build クイズ 30/30** | 🔴 必須 |
 | **M7** | **9/23（水）** | Review 完了 | `/r2b-review-sprint3` のガイドを通し、**Reviewクイズ 76問（8割が記述式）**に回答。`docs/review/review-log.md` に記録 | 🟠 推奨 |
 | **M8** | **9/24（木）** | お題B 完了 ＋ 通しリハ | 自作した仕組み2〜3件が動き `docs/env/customizations.md` に記録／13〜14分で通せることを確認 | 🟠 推奨 |
 | **M9** | **9/25（金）18:00** | **発表会** | — | 🔴 **絶対** |
@@ -216,11 +216,11 @@ flowchart LR
 | — | `/design-problem-check` | （指摘レポート） | AI は修正しない。自分で直す |
 | 2 | `/design-requirement` | `02-requirement.md` | 機能一覧・受入基準・Scope1〜3・非機能。**受入基準は測定可能に**（シナリオテストと1対1になる） |
 | 3 | `/design-spec` | `03-spec.md` ＋ `mocks/mockup.html` | 5〜15画面。アップロード／進捗／HITL確認／ダウンロードを忘れない。**デザイントークンはここで確定し、Build 中に変えられない** |
-| 4 | `/design-agent` | **`agent-plan.md`** | ⭐Sprint3 の目玉。Part1（ミッション・インプット・完了条件・体験）／Part2（ツール一覧・サブエージェント・フロー・ガードレール・評価シナリオ） |
-| — | `/design-product-check` | （指摘レポート） | 02・03・agent-plan Part1 の整合性 |
+| 4 | `/design-agent` | **`agent.md`** | ⭐Sprint3 の目玉。Part1（ミッション・インプット・完了条件・体験）／Part2（ツール一覧・サブエージェント・フロー・ガードレール・評価シナリオ） |
+| — | `/design-product-check` | （指摘レポート） | 02・03・`agent.md` Part1 の整合性 |
 | 5 | `/design-db` | `04-db.md` | ツール一覧の「必要なテーブル」から導く。**ジョブ・実行ログ・中間成果物の置き場所を忘れやすい** |
 | 6 | `/design-api-ipo` | `05-api-ipo.md` | ツールの「必要なAPI」＋**エージェント自体の起動・進捗取得・結果取得API** |
-| — | `/design-implementation-check` | （指摘レポート） | 04・05・agent-plan Part2 の整合性 |
+| — | `/design-implementation-check` | （指摘レポート） | 04・05・`agent.md` Part2 の整合性 |
 | 7 | `/design-scenario-test` | `06-scenario-test.md` | 受入基準と完了条件に1対1。**異常系（読取不能・最大ターン数超過）を必ず入れる** |
 
 #### 4枠への割り付け（9/11 改訂）
@@ -239,25 +239,26 @@ flowchart LR
 > ⚠️ `/r2b-*` `/design-*` は **Claude Code のスラッシュコマンド**。zsh に打つと `no such file or directory` になる。
 > `cd ~/r2b/r2b-sprint3 && claude` で起動してから、Claude Code のプロンプトに直接タイプする（§8 のとおり AI からは起動できない）。
 
-#### ⚠️ 未解決：エージェント設計の成果物ファイル名
+#### 提出するファイル名（2026-09-11 確定）
 
-**本計画書は `agent-plan.md` と書いているが、`/r2b-design-sprint3`（プラグイン側のスキル定義）は `agent.md` を指している**（2026-09-11 に iMac で確認）。
-GitHub同期は「ファイル名の完全一致」が条件なので、**どちらかが間違っていると提出が通らない。**
+Sprint3 の7成果物は以下。**`docs/requirements/` 直下**に、この名前と**完全一致**で置く。
 
-判定の優先順位は **① 提出アプリの「提出物」タブが表示する名前 → ② プラグインのスキル定義 → ③ 本計画書**。
-本計画書は 9/8 に自分で書いたメモなので、①②と食い違ったら**①②が正**。ステップ5（`/design-agent`）に入る前に確定させること。
-
-```zsh
-# プラグイン側の定義を確認
-grep -rn "agent-plan\|agent\.md" ~/.claude/plugins/marketplaces/r2b-marketplace/ --include=*.md | head -30
-ls ~/.claude/plugins/marketplaces/r2b-marketplace/docs/design-templates/
+```text
+01-request.md  02-requirement.md  03-spec.md  agent.md
+04-db.md       05-api-ipo.md      06-scenario-test.md
 ```
 
-確定したら本節と §5 の表・§8・README の記載を正しい方に揃える。
+> **エージェント設計の成果物は `agent.md`。`agent-plan.md` ではない。**
+> 9/8 版の本計画書は `agent-plan.md` と書いていたが誤りだった。プラグインのテンプレートは
+> `agent_template.md`（`agent-plan_template.md` は存在しない）で、`/r2b-design-sprint3` のスキル定義も
+> `agent.md` を指している。命名規則も `01-request_template.md` → `01-request.md` と一致する。
+> GitHub同期はファイル名の完全一致が条件なので、`agent-plan.md` で出すと**その1件だけ未提出のまま残る**。
+
+`07-infra_template.md` もテンプレート群には存在するが、**Sprint3 ではインフラ設計を作らない**（§2）。7成果物に含めない。
 
 #### ここで一番大事なこと：完了条件
 
-`agent-plan.md` の**完了条件がそのまま評価の合格基準になる**。「いい感じに整理できたら完了」は不可。
+`agent.md` の**完了条件がそのまま評価の合格基準になる**。「いい感じに整理できたら完了」は不可。
 
 > ✅ 「品目リストの全行に品目名・数量・納期が埋まり、Excel が生成されたら完了」
 > ❌ 「引合書がうまく整理できたら完了」
@@ -329,9 +330,9 @@ cd frontend && npm run dev                            # ターミナル3
 | 正常系 | きれいに書かれた引合書1件（品目・数量・単位が明記） |
 | 異常系 | 項目が欠けている／フォーマットが大きく違う／読めないファイル を各1件 |
 
-トレース（`backend/traces/{run_id}.jsonl`）を `agent-plan.md` と突き合わせる観点: **完了条件の充足／ツールの使い方／ガードレール／停止条件（ハング・暴走していないか）**。
+トレース（`backend/traces/{run_id}.jsonl`）を `agent.md` と突き合わせる観点: **完了条件の充足／ツールの使い方／ガードレール／停止条件（ハング・暴走していないか）**。
 
-Fail が出たら、原因を**要件（02）・設計（03〜05・agent-plan）・実装**のどこかに切り分けてから `/build-loop --change`。切り分けずに実装だけ触ると同じ Fail が形を変えて戻ってくる。
+Fail が出たら、原因を**要件（02）・設計（03〜05・`agent.md`）・実装**のどこかに切り分けてから `/build-loop --change`。切り分けずに実装だけ触ると同じ Fail が形を変えて戻ってくる。
 
 #### 3-4. Build クイズ 30問（M6）
 
@@ -381,7 +382,7 @@ Build したプロダクトを題材に、C4 model の3階層（L1 全体像／L
 | ニーズ | 向いている仕組み |
 |--------|---------------|
 | エージェント評価を毎回手でやっている | 評価ランナーを **Skill** 化 |
-| トレースを毎回同じ観点で確認したい | `agent-plan.md` と突き合わせる **Skill** |
+| トレースを毎回同じ観点で確認したい | `agent.md` と突き合わせる **Skill** |
 | テストせず完了報告されるのが不安 | コミット前にテストを強制する **Hooks** |
 | Fail の原因切り分けを任せたい | 読み取り専用の**サブエージェント** |
 
@@ -409,7 +410,7 @@ Build したプロダクトを題材に、C4 model の3階層（L1 全体像／L
 | 資料 | 場所 |
 |------|------|
 | 設計書一式 | `docs/requirements/` |
-| エージェント設計 | `docs/requirements/agent-plan.md` |
+| エージェント設計 | `docs/requirements/agent.md` |
 | 実行トレース | `backend/traces/{run_id}.jsonl` |
 | 決定・学びのログ | `.claude/memory.md` の `[AD-xxx]` `[LN-xxx]` |
 | Review の成果物 | `docs/review/review-guide.html`・`review-log.md` |
@@ -435,7 +436,7 @@ Build したプロダクトを題材に、C4 model の3階層（L1 全体像／L
 | ~~R8~~ | ~~**開発機の移行（会社Mac → 個人 iMac）**~~ | — | ✅ **9/11 解消。** 環境診断は全項目グリーン、R2B プラグインも導入済み、API キー移送も疎通確認済み。代償は Design 着手の1日遅れのみ（M2 を 9/14 に改訂） | 完了 |
 | R9 | **Foundation の枠が平日夜4回しかない** | 0-7 が 9/18 に間に合わないと、連休の build-loop が削られる | Docker が稼働済みなので Slice 0-2 のリスクは解消。R4 をクラウドセッションに逃がして枠を確保する。それでも押したら §4 の**撤退ライン**を発動 | 9/18 |
 | R10 | **会社Mac に API キーが残存** | 返却・初期化・監査で、月 $50 枠が紐づくキーが露出する | `security delete-generic-password -a "$USER" -s anthropic-r2b-sprint3` で削除し、両機のクリップボード履歴（Raycast / Alfred / Maccy）も消す | 9/12 |
-| R11 | **成果物ファイル名の食い違い**（`agent-plan.md` か `agent.md` か） | 名前が違うと GitHub同期で提出が通らない（完全一致が条件） | §5 Phase 2 の「未解決」節を参照。**ステップ5に入る前に、提出アプリの表示名とプラグインのスキル定義で確定させる** | 9/13 |
+| ~~R11~~ | ~~**成果物ファイル名の食い違い**~~ | — | ✅ **9/11 解消。正は `agent.md`**（`agent-plan.md` ではない）。テンプレートが `agent_template.md` であること＋スキル定義の記載の2点で確定。9/8 版の計画書の記載が誤りだった | 完了 |
 
 ---
 
@@ -480,7 +481,7 @@ Build したプロダクトを題材に、C4 model の3階層（L1 全体像／L
 | 5 | **Design 7成果物**（M2・9/14） | 🔴 **唯一のクリティカル項目。9/11 夜から着手**（§5 Phase 2 の4枠割り付け） |
 | 6 | **会社Mac のキーチェーンからキーを削除**（R10） | ⬜ 両機のクリップボード履歴も消す |
 | 7 | **Learn 教材8本の読了**（M1） | ⬜ 期限超過。Design と並走で消化する |
-| 8 | **成果物ファイル名の確定**（`agent-plan.md` / `agent.md`・R11） | ⬜ ステップ5に入る前に |
+| 8 | 成果物ファイル名の確定（R11） | ✅ 9/11 完了。**正は `agent.md`** |
 | 9 | 発表時間割の確認（R7） | ⬜ 9/15 までに #0100 / #0110 |
 | 10 | 旧トークン `R2B Bootcamp` の削除 | ⬜ Phase 0 ⑤の動作確認が済んだので、削除してよい |
 
@@ -494,7 +495,7 @@ Build したプロダクトを題材に、C4 model の3階層（L1 全体像／L
 | APIキー | `r2b-sprint3` / Default ワークスペース / 有効期限 2026-10-08 |
 
 参考料金（1Mトークンあたり）: Opus 5 = $5 入力 / $25 出力、Sonnet 5 = $2 / $10、Haiku 4.5 = $1 / $5。
-**モデルは `/design-agent` で `agent-plan.md` に書いた値が `definition.py` に写される**ため、Design フェーズがそのままコスト設計になる。
+**モデルは `/design-agent` で `agent.md` に書いた値が `definition.py` に写される**ため、Design フェーズがそのままコスト設計になる。
 
 #### APIキーの保管と受け渡し
 
@@ -537,7 +538,7 @@ git status --porcelain | grep -q "backend/.env" && echo "⚠️ 追跡対象に�
 | ブートキャンプアプリ | https://r2b-webapp.vercel.app/sprint3 |
 | 課題ページ | https://r2b-webapp.vercel.app/assignments/sprint3 |
 | R2B プラグイン | `~/.claude/plugins/marketplaces/r2b-marketplace/`（v3.6.1・SALT2-Boost/r2b-v2） |
-| 設計テンプレート | `~/.claude/plugins/marketplaces/r2b-marketplace/docs/design-templates/`（`agent-plan_template.md` を含む） |
+| 設計テンプレート | `~/.claude/plugins/marketplaces/r2b-marketplace/docs/design-templates/`（`01-request` 〜 `06-scenario-test` ＋ `agent_template.md` ＋ Sprint3 では使わない `07-infra_template.md`） |
 | Slack | #0100_開発サマーブートキャンプ ／ #0110_開発チーム10（日報） ／ #0400_質問対応 ／ #0407_bootcamp_lab（自主参加） |
 
 ### コマンド早見表

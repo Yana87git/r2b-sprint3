@@ -15,4 +15,9 @@ R2B ブートキャンプ Sprint3（個人開発）の作業リポジトリ。
 | Build   | `/r2b-build-sprint3` → foundation エージェント → `/build-loop` |
 | Review  | `/r2b-review-sprint3` |
 
-設計成果物は `docs/requirements/` 配下（`agent-plan.md` が Sprint3 の中心）。
+設計成果物は `docs/requirements/` **直下**（`agent.md` が Sprint3 の中心）。GitHub同期はファイル名の完全一致が条件。
+
+```text
+01-request.md  02-requirement.md  03-spec.md  agent.md
+04-db.md       05-api-ipo.md      06-scenario-test.md
+```
