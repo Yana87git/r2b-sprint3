@@ -11,6 +11,8 @@ from app.api.v1.schemas import (
     BulkCheckResponse,
     ConfirmResponse,
     ItemListResponse,
+    ItemRowUpdate,
+    ItemRowUpdateResponse,
     RowCheckResponse,
     ValueSourceResponse,
 )
@@ -25,6 +27,7 @@ from app.services import (
     inquiry_intake_service,
     input_exclusion_service,
     inquiry_list_service,
+    item_edit_service,
     item_list_service,
     source_excerpt_service,
 )
@@ -95,6 +98,34 @@ async def get_items(
         raise api_error(404, "NOT_FOUND", "案件が見つかりません")
     await session.commit()
     return ItemListResponse(**payload)
+
+
+@router.patch("/{inquiry_id}/items/{row_id}", response_model=ItemRowUpdateResponse)
+async def update_row(
+    inquiry_id: uuid.UUID,
+    row_id: uuid.UUID,
+    body: ItemRowUpdate,
+    session: AsyncSession = Depends(get_db),
+) -> ItemRowUpdateResponse:
+    """値を直し、その行を確認済みにする（⑤ #10）。"""
+    inquiry = await item_list_service.get_inquiry(session, inquiry_id)
+    if inquiry is None:
+        raise api_error(404, "NOT_FOUND", "案件が見つかりません")
+    if inquiry.status == "confirmed":
+        raise api_error(409, "ALREADY_CONFIRMED", "確定済みの案件は直せません")
+    try:
+        payload = await item_edit_service.update_row(
+            session,
+            inquiry_id,
+            row_id,
+            {field: value.model_dump() for field, value in body.values.items()},
+        )
+    except item_edit_service.EditError as e:
+        raise api_error(400, e.code, e.message, field=e.field) from e
+    if payload is None:
+        raise api_error(404, "NOT_FOUND", "行が見つかりません")
+    await session.commit()
+    return ItemRowUpdateResponse(**payload)
 
 
 @router.post("/{inquiry_id}/items/{row_id}/check", response_model=RowCheckResponse)

@@ -192,3 +192,35 @@ export function excludeInput(
     { method: excluded ? "POST" : "DELETE" },
   );
 }
+
+export type ItemValueUpdate = {
+  state?: "extracted" | "needs_confirmation";
+  value?: string;
+  kind?: "fixed_date" | "month_range";
+  start_date?: string;
+  end_date?: string;
+};
+
+export type RowUpdateResult = {
+  row_id: string;
+  row_no: number;
+  classification: Classification;
+  check_state: string;
+  edited_fields: string[];
+};
+
+/** ⑤ #10。直すとその行は確認済みになる。 */
+export function updateRow(
+  inquiryId: string,
+  rowId: string,
+  values: Record<string, ItemValueUpdate>,
+): Promise<RowUpdateResult> {
+  return request<RowUpdateResult>(
+    `/api/v1/inquiries/${inquiryId}/items/${rowId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ values }),
+    },
+  );
+}

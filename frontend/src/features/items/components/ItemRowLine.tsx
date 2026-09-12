@@ -10,9 +10,16 @@ type Props = {
   onCheck: (rowId: string) => void;
   disabled: boolean;
   onOpenSource?: (valueId: string) => void;
+  onEdit?: (row: ItemRow) => void;
 };
 
-export function ItemRowLine({ row, onCheck, disabled, onOpenSource }: Props) {
+export function ItemRowLine({
+  row,
+  onCheck,
+  disabled,
+  onOpenSource,
+  onEdit,
+}: Props) {
   const { t } = useTranslation();
   const checked = row.check_state === "checked";
   return (
@@ -69,7 +76,12 @@ export function ItemRowLine({ row, onCheck, disabled, onOpenSource }: Props) {
           >
             {t("items.check")}
           </button>
-        )}
+        )}{" "}
+        {onEdit && !row.excluded ? (
+          <button className="btn btn-sm" onClick={() => onEdit(row)}>
+            {t("items.edit")}
+          </button>
+        ) : null}
       </td>
     </tr>
   );

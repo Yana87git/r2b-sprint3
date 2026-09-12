@@ -196,7 +196,7 @@ def _validate_value(
     return stored, errors
 
 
-def _classification(values: list[dict[str, Any]]) -> str:
+def classify_row(values: list[dict[str, Any]]) -> str:
     """行の分類は値の状態から決まる（④「行の分類の呼び方」）。"""
     if any(v["state"] == "needs_confirmation" for v in values):
         return "needs_confirmation"
@@ -254,7 +254,7 @@ async def replace_rows(
         item_row = ItemRow(
             inquiry_id=inquiry_id,
             row_no=int(row_no),
-            classification=_classification(stored_values),
+            classification=classify_row(stored_values),
         )
         session.add(item_row)
         await session.flush()

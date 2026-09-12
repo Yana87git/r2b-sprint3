@@ -52,6 +52,11 @@ class ItemValue(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # （そうしないと CHECK の locator IS NULL が成り立たない）
     locator: Mapped[dict | None] = mapped_column(JSONB(none_as_null=True), nullable=True)
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # 人が直した値（⑤ #10）。読み取り元を持たない値を許すのはこの場合だけ
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    edited_by: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -64,10 +69,12 @@ class ItemValue(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             "due_kind IS NULL OR due_kind IN ('fixed_date','month_range','needs_confirmation')",
             name="ck_item_values_due_kind",
         ),
-        # 要確認でない値には必ず原文と読み取り元がある（agent.md 完了条件④・ガードレール）
+        # 要確認でない値には必ず原文と読み取り元がある（agent.md 完了条件④・ガードレール）。
+        # **例外は人が直した値だけ**（edited_at が入る。人が入れた値は読み違いではないため、
+        # エージェントが推測で埋めるのを止めるこの制約の対象外とする。⑤ #10）
         CheckConstraint(
-            "(state = 'extracted' AND raw_text IS NOT NULL AND source_input_id IS NOT NULL "
-            "AND locator IS NOT NULL) OR "
+            "(state = 'extracted' AND ((raw_text IS NOT NULL AND source_input_id IS NOT NULL "
+            "AND locator IS NOT NULL) OR edited_at IS NOT NULL)) OR "
             "(state = 'needs_confirmation' AND raw_text IS NULL AND source_input_id IS NULL "
             "AND locator IS NULL)",
             name="ck_item_values_extracted_needs_source",

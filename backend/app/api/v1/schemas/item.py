@@ -128,3 +128,25 @@ class ValueSourceResponse(BaseModel):
 class BulkCheckResponse(BaseModel):
     checked_rows: int = Field(description="この操作で確認済みにした行数")
     summary: ItemSummary
+
+
+class ItemValueUpdate(BaseModel):
+    state: str = Field(default="extracted", description="extracted / needs_confirmation")
+    value: str | None = Field(default=None, description="品目名・型番・数量・単位・備考の値")
+    kind: str | None = Field(default=None, description="納期の種別 fixed_date / month_range")
+    start_date: str | None = None
+    end_date: str | None = None
+
+
+class ItemRowUpdate(BaseModel):
+    values: dict[str, ItemValueUpdate] = Field(
+        description="直す項目と値。必須5項目は値か「要確認」のどちらか"
+    )
+
+
+class ItemRowUpdateResponse(BaseModel):
+    row_id: str
+    row_no: int
+    classification: str
+    check_state: str
+    edited_fields: list[str]

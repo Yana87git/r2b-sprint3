@@ -9,6 +9,7 @@ import type { Classification, ItemRow } from "../api";
 import { ItemRowLine } from "./ItemRowLine";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { SourcePanel } from "./SourcePanel";
+import { RowEditDialog } from "./RowEditDialog";
 
 const GROUPS: { key: string; classifications: Classification[] }[] = [
   {
@@ -27,6 +28,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const [openValueId, setOpenValueId] = useState<string | null>(null);
   const bulk = useBulkCheck(inquiryId);
   const exclusion = useExcludeInput(inquiryId);
+  const [editing, setEditing] = useState<ItemRow | null>(null);
 
   if (isPending) return <p className="meta">{t("common.loading")}</p>;
   if (isError) {
@@ -209,6 +211,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                         onCheck={(rowId) => check.mutate(rowId)}
                         disabled={check.isPending}
                         onOpenSource={setOpenValueId}
+                        onEdit={setEditing}
                       />
                     ))}
                   </>
@@ -263,6 +266,14 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
           {t("items.confirm")}
         </button>
       </div>
+
+      {editing ? (
+        <RowEditDialog
+          inquiryId={inquiryId}
+          row={rows.find((r) => r.row_id === editing.row_id) ?? editing}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
 
       {openValueId ? (
         <SourcePanel

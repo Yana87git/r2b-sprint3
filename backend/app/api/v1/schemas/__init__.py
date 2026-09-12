@@ -10,6 +10,8 @@ from app.api.v1.schemas.inquiry import (
 from app.api.v1.schemas.item import (
     BulkCheckResponse,
     ItemListResponse,
+    ItemRowUpdate,
+    ItemRowUpdateResponse,
     ItemSummary,
     RowCheckResponse,
     ValueSourceResponse,
@@ -25,6 +27,8 @@ __all__ = [
     "InquiryListItem",
     "InquiryListResponse",
     "ItemListResponse",
+    "ItemRowUpdate",
+    "ItemRowUpdateResponse",
     "ItemSummary",
     "RowCheckResponse",
     "RunStatusResponse",

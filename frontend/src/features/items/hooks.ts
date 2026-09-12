@@ -9,7 +9,9 @@ import {
   fetchItems,
   type ConfirmResult,
   fetchValueSource,
+  updateRow,
   type ItemList,
+  type ItemValueUpdate,
   type ValueSourceDetail,
 } from "./api";
 
@@ -82,5 +84,22 @@ export function useExcludeInput(inquiryId: string) {
     }) => excludeInput(inquiryId, inputId, excluded),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: itemsKey(inquiryId) }),
+  });
+}
+
+export function useUpdateRow(inquiryId: string, onSaved: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      rowId,
+      values,
+    }: {
+      rowId: string;
+      values: Record<string, ItemValueUpdate>;
+    }) => updateRow(inquiryId, rowId, values),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: itemsKey(inquiryId) });
+      onSaved();
+    },
   });
 }
