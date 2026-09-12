@@ -18,6 +18,7 @@ backend/.env
 node_modules/
 .next/
 out/
+*.tsbuildinfo
 
 # Generated
 frontend/src/shared/api/generated/
