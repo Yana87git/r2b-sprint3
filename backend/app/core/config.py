@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # エージェント（Slice 0-7 で使う。値は backend/.env のみに置く）
     ANTHROPIC_API_KEY: str = ""
 
+    # 原本と出力 Excel の保管先（backend からの相対。git 管理外）
+    STORAGE_DIR: str = "storage"
+
     # 認証: 今回は実装しない（① 6章。固定の営業事務ユーザーで動かす）
     # 将来 Scope 2 で JWT を入れるときの設定置き場:
     # JWT_SECRET_KEY: str = ""

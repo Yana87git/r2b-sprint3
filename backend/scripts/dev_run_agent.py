@@ -41,7 +41,7 @@ async def main(name: str, clean: bool) -> None:
         inquiry_id = inquiry.id
     print(f"案件: {inquiry_id}（{name}）")
 
-    run_id = jobs.start_agent_job(
+    run_id = await jobs.start_agent_job(
         USER_PROMPT,
         system_prompt=build_system_prompt(str(inquiry_id)),
         inquiry_id=str(inquiry_id),

@@ -23,6 +23,9 @@ out/
 frontend/src/shared/api/generated/
 backend/openapi.json
 
+# 原本と出力 Excel（⑤ #4 が保管する。実データなのでコミットしない）
+backend/storage/
+
 # Agent traces（エージェント実行トレース。設計との突き合わせ用ローカルログ）
 # ディレクトリ自体は .gitkeep で残す（クローン直後に backend/traces/ が無いと初回実行が失敗するため）
 backend/traces/*

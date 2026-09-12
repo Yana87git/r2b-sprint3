@@ -6,6 +6,7 @@
 - ジョブ一覧はプロセス内保持。永続化は 04 の agent_runs（明日のツール実装と一緒に繋ぐ）
 """
 import asyncio
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
@@ -16,6 +17,7 @@ from app.agent import definition
 from app.agent.context import set_current_inquiry_id
 from app.agent.runner import AgentRunResult, run_agent
 from app.agent.trace import TraceRecorder
+from app.services import agent_run_service
 
 
 @dataclass
@@ -29,10 +31,11 @@ class AgentJob:
     task: asyncio.Task | None = field(default=None, repr=False)
 
 
+logger = logging.getLogger(__name__)
 _jobs: dict[str, AgentJob] = {}
 
 
-def start_agent_job(
+async def start_agent_job(
     prompt: str,
     *,
     system_prompt: str,
@@ -40,7 +43,11 @@ def start_agent_job(
     attempt_no: int = 1,
     scenario: str | None = None,
 ) -> str:
-    """バックグラウンドで起動し、run_id を即返す（完了を待たない）。"""
+    """バックグラウンドで起動し、run_id を即返す（完了を待たない）。
+
+    実行記録（agent_runs）は**タスクを作る前に**書く。⑤ #8 は 202 の直後から
+    この記録をポーリングするため、後から書くと一瞬 404 になる。
+    """
     trace = TraceRecorder(inquiry_id=inquiry_id, scenario=scenario)
     job = AgentJob(
         run_id=trace.run_id,
@@ -50,6 +57,15 @@ def start_agent_job(
         attempt_no=attempt_no,
     )
     _jobs[trace.run_id] = job
+    if inquiry_id:
+        await agent_run_service.create_run(
+            run_id=trace.run_id,
+            inquiry_id=_uuid.UUID(inquiry_id),
+            attempt_no=attempt_no,
+            model=definition.MODEL,
+            max_turns=definition.MAX_TURNS,
+            trace_path=str(trace.path),
+        )
     # タスクを作る前に設定する（作成時のコンテキストが子タスクへ伝わる）
     set_current_inquiry_id(_uuid.UUID(inquiry_id) if inquiry_id else None)
     job.task = asyncio.create_task(_execute(job, prompt, system_prompt=system_prompt, trace=trace))
@@ -70,15 +86,28 @@ async def _execute(job: AgentJob, prompt: str, *, system_prompt: str, trace: Tra
         )
         job.result = result
         job.status = result.stop_reason
+        await _record_finish(job, result.stop_reason, result.turns)
     except TimeoutError:
         # 外側発火 = 内側の異常。握りつぶさずバグとして調査する（⑥ TEST-18 は発火しないことを確かめる）
         trace.record_run_end(
             "outer_timeout", detail=f"{definition.OUTER_TIMEOUT_S}s 超過（内側が機能せず）"
         )
         job.status = "outer_timeout"
+        await _record_finish(job, "outer_timeout", None)
     except Exception as e:  # 予期しない例外もジョブとトレースに残す
         trace.record_run_end("failed", detail=repr(e))
         job.status = "failed"
+        await _record_finish(job, "failed", None)
+
+
+async def _record_finish(job: AgentJob, stop_reason: str, turns: int | None) -> None:
+    """実行記録を閉じる。ここで失敗しても実行結果は返す（記録は握りつぶさずログに残す）。"""
+    if not job.inquiry_id:
+        return
+    try:
+        await agent_run_service.finish_run(run_id=job.run_id, stop_reason=stop_reason, turns=turns)
+    except Exception as e:  # noqa: BLE001
+        logger.warning("実行記録の更新に失敗: run_id=%s %r", job.run_id, e)
 
 
 def get_job(run_id: str) -> AgentJob | None:

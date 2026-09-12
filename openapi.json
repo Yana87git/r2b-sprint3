@@ -1,0 +1,924 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "引合書整理エージェント API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/inquiries": {
+      "post": {
+        "tags": [
+          "Inquiries"
+        ],
+        "summary": "Create Inquiry",
+        "description": "入力を受け付け、案件を作り、**そのままエージェントを起動する**（⑤ #4）。",
+        "operationId": "create_inquiry_api_v1_inquiries_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_inquiry_api_v1_inquiries_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InquiryCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inquiries/{inquiry_id}/items": {
+      "get": {
+        "tags": [
+          "Inquiries"
+        ],
+        "summary": "Get Items",
+        "description": "品目リスト案（⑤ #9）。**確認待ちで未記録のときだけ** KPI1 の起点を書く。",
+        "operationId": "get_items_api_v1_inquiries__inquiry_id__items_get",
+        "parameters": [
+          {
+            "name": "inquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Inquiry Id"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter"
+            }
+          },
+          {
+            "name": "include_excluded",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Excluded"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inquiries/{inquiry_id}/items/{row_id}/check": {
+      "post": {
+        "tags": [
+          "Inquiries"
+        ],
+        "summary": "Check Row",
+        "description": "行を確認済みにする（⑤ #11）。",
+        "operationId": "check_row_api_v1_inquiries__inquiry_id__items__row_id__check_post",
+        "parameters": [
+          {
+            "name": "inquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Inquiry Id"
+            }
+          },
+          {
+            "name": "row_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Row Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RowCheckResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inquiries/{inquiry_id}/confirm": {
+      "post": {
+        "tags": [
+          "Inquiries"
+        ],
+        "summary": "Confirm",
+        "description": "確定して Excel を出力する（⑤ #17）。",
+        "operationId": "confirm_api_v1_inquiries__inquiry_id__confirm_post",
+        "parameters": [
+          {
+            "name": "inquiry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Inquiry Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "Get Run",
+        "operationId": "get_run_api_v1_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "ヘルスチェック。",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "ルート。",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/db-schema-test": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Db Schema Test",
+        "description": "スキーマの疎通確認（Slice 0-3）。④ の8テーブルと固定ユーザーを確認する。",
+        "operationId": "db_schema_test_api_v1_db_schema_test_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Db Schema Test Api V1 Db Schema Test Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AcceptedInput": {
+        "properties": {
+          "input_id": {
+            "type": "string",
+            "title": "Input Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "description": "excel / pdf / word / mail_body"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "「Excel形式として受け付けました」に相当する文言"
+          }
+        },
+        "type": "object",
+        "required": [
+          "input_id",
+          "display_name",
+          "format",
+          "message"
+        ],
+        "title": "AcceptedInput"
+      },
+      "Body_create_inquiry_api_v1_inquiries_post": {
+        "properties": {
+          "files": {
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
+            "type": "array",
+            "title": "Files",
+            "default": []
+          },
+          "mail_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mail Body"
+          }
+        },
+        "type": "object",
+        "title": "Body_create_inquiry_api_v1_inquiries_post"
+      },
+      "ConfirmResponse": {
+        "properties": {
+          "inquiry_id": {
+            "type": "string",
+            "title": "Inquiry Id"
+          },
+          "confirmed_at": {
+            "type": "string",
+            "title": "Confirmed At"
+          },
+          "row_count": {
+            "type": "integer",
+            "title": "Row Count"
+          },
+          "pending_row_count": {
+            "type": "integer",
+            "title": "Pending Row Count",
+            "description": "「顧客回答待ち」として出力した行数"
+          },
+          "download_path": {
+            "type": "string",
+            "title": "Download Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inquiry_id",
+          "confirmed_at",
+          "row_count",
+          "pending_row_count",
+          "download_path"
+        ],
+        "title": "ConfirmResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InquiryCreateResponse": {
+        "properties": {
+          "inquiry_id": {
+            "type": "string",
+            "title": "Inquiry Id"
+          },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/AcceptedInput"
+            },
+            "type": "array",
+            "title": "Inputs"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "自動で始めたエージェント実行のID（attempt_no = 1）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inquiry_id",
+          "inputs",
+          "run_id"
+        ],
+        "title": "InquiryCreateResponse"
+      },
+      "ItemListResponse": {
+        "properties": {
+          "inquiry_id": {
+            "type": "string",
+            "title": "Inquiry Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "review_started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Started At"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ItemRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ItemSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inquiry_id",
+          "status",
+          "review_started_at",
+          "rows",
+          "summary"
+        ],
+        "title": "ItemListResponse"
+      },
+      "ItemRowOut": {
+        "properties": {
+          "row_id": {
+            "type": "string",
+            "title": "Row Id"
+          },
+          "row_no": {
+            "type": "integer",
+            "title": "Row No"
+          },
+          "classification": {
+            "type": "string",
+            "title": "Classification",
+            "description": "needs_confirmation / low_confidence / high_confidence"
+          },
+          "check_state": {
+            "type": "string",
+            "title": "Check State"
+          },
+          "excluded": {
+            "type": "boolean",
+            "title": "Excluded"
+          },
+          "source_opened": {
+            "type": "boolean",
+            "title": "Source Opened"
+          },
+          "values": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ItemValueOut"
+            },
+            "type": "object",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row_id",
+          "row_no",
+          "classification",
+          "check_state",
+          "excluded",
+          "source_opened",
+          "values"
+        ],
+        "title": "ItemRowOut"
+      },
+      "ItemSummary": {
+        "properties": {
+          "total_rows": {
+            "type": "integer",
+            "title": "Total Rows"
+          },
+          "excluded_rows": {
+            "type": "integer",
+            "title": "Excluded Rows"
+          },
+          "unchecked_rows": {
+            "type": "integer",
+            "title": "Unchecked Rows"
+          },
+          "sampled_rows": {
+            "type": "integer",
+            "title": "Sampled Rows",
+            "description": "読み取り元を開いた行の数（一括確認の抜き取り判定）"
+          },
+          "by_classification": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Classification"
+          },
+          "unreadable_input_count": {
+            "type": "integer",
+            "title": "Unreadable Input Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_rows",
+          "excluded_rows",
+          "unchecked_rows",
+          "sampled_rows",
+          "by_classification"
+        ],
+        "title": "ItemSummary"
+      },
+      "ItemValueOut": {
+        "properties": {
+          "value_id": {
+            "type": "string",
+            "title": "Value Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State",
+            "description": "extracted / needs_confirmation"
+          },
+          "confidence": {
+            "type": "string",
+            "title": "Confidence",
+            "description": "high / low"
+          },
+          "raw_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Text"
+          },
+          "value_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Text"
+          },
+          "quantity_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Value"
+          },
+          "due_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Kind"
+          },
+          "due_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Start"
+          },
+          "due_end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due End"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValueSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "clues": {
+            "items": {
+              "$ref": "#/components/schemas/ValueClueOut"
+            },
+            "type": "array",
+            "title": "Clues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value_id",
+          "state",
+          "confidence",
+          "raw_text",
+          "value_text",
+          "quantity_value",
+          "due_kind",
+          "due_start",
+          "due_end",
+          "source",
+          "clues"
+        ],
+        "title": "ItemValueOut"
+      },
+      "RowCheckResponse": {
+        "properties": {
+          "row_id": {
+            "type": "string",
+            "title": "Row Id"
+          },
+          "check_state": {
+            "type": "string",
+            "title": "Check State"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ItemSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row_id",
+          "check_state",
+          "checked_at",
+          "summary"
+        ],
+        "title": "RowCheckResponse"
+      },
+      "RunStatusResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "inquiry_id": {
+            "type": "string",
+            "title": "Inquiry Id"
+          },
+          "attempt_no": {
+            "type": "integer",
+            "title": "Attempt No"
+          },
+          "run_status": {
+            "type": "string",
+            "title": "Run Status",
+            "description": "running / finished"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "案件の段階（受付済み／読み取り中／…）"
+          },
+          "inputs_done": {
+            "type": "integer",
+            "title": "Inputs Done"
+          },
+          "inputs_total": {
+            "type": "integer",
+            "title": "Inputs Total"
+          },
+          "eta_seconds": {
+            "type": "integer",
+            "title": "Eta Seconds",
+            "description": "残り時間の目安。目安を過ぎたら0"
+          },
+          "stop_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Reason"
+          },
+          "unreadable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unreadable Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "inquiry_id",
+          "attempt_no",
+          "run_status",
+          "status",
+          "inputs_done",
+          "inputs_total",
+          "eta_seconds",
+          "stop_reason",
+          "unreadable_reason"
+        ],
+        "title": "RunStatusResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ValueClueOut": {
+        "properties": {
+          "clue": {
+            "type": "string",
+            "title": "Clue",
+            "description": "H1〜H4"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clue",
+          "detail"
+        ],
+        "title": "ValueClueOut"
+      },
+      "ValueSource": {
+        "properties": {
+          "input_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Id"
+          },
+          "locator": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locator",
+            "description": "形式ごとの位置（④ item_values.locator）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "input_id",
+          "locator"
+        ],
+        "title": "ValueSource"
+      }
+    }
+  }
+}
