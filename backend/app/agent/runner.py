@@ -82,6 +82,7 @@ async def run_agent(
 
     options = _build_options(system_prompt)
     turn = 0
+    tool_names: dict[str, str] = {}  # tool_use_id → ツール名（結果の記録に使う）
     try:
         # 内側タイムアウト: 実行全体の上限
         async with asyncio.timeout(definition.INNER_TIMEOUT_S):
@@ -112,12 +113,15 @@ async def run_agent(
                         if isinstance(block, TextBlock):
                             trace.record_decision(block.text)
                         elif isinstance(block, ToolUseBlock):
+                            tool_names[block.id] = block.name
                             trace.record_tool_call(block.name, block.input)
                 elif isinstance(message, UserMessage):
                     for block in getattr(message, "content", []) or []:
                         if isinstance(block, ToolResultBlock):
                             trace.record_tool_result(
-                                _tool_name_of(block), block.content, is_error=bool(block.is_error)
+                                tool_names.get(block.tool_use_id, ""),
+                                block.content,
+                                is_error=bool(block.is_error),
                             )
                 elif isinstance(message, ResultMessage):
                     if message.num_turns and message.num_turns >= definition.MAX_TURNS:
@@ -141,8 +145,3 @@ async def run_agent(
     result.elapsed_s = time.monotonic() - started
     trace.record_run_end(result.stop_reason, turns=result.turns or turn, elapsed_s=result.elapsed_s)
     return result
-
-
-def _tool_name_of(block: ToolResultBlock) -> str:
-    """ツール結果からツール名を引く（SDK が名前を持たない場合は空文字）。"""
-    return getattr(block, "tool_name", "") or ""

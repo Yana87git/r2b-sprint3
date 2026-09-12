@@ -35,6 +35,34 @@ def _redact(value: Any) -> Any:
     return value
 
 
+def _base_tool_name(tool: str) -> str:
+    """mcp__app__read_file_content → read_file_content。"""
+    return tool.rsplit("__", 1)[-1] if tool else ""
+
+
+def _extract_summary(result: Any) -> dict[str, Any]:
+    """ツール結果（dict / MCP の content 形式 / JSON 文字列）から summary だけを取り出す。"""
+    if isinstance(result, dict):
+        if "summary" in result:
+            return result["summary"]
+        for key in ("content", "text"):
+            if result.get(key) is not None:
+                return _extract_summary(result[key])
+        return {"note": "summary なし"}
+    if isinstance(result, list):
+        for block in result:
+            found = _extract_summary(block)
+            if found and "note" not in found:
+                return found
+        return {"note": "summary なし"}
+    if isinstance(result, str):
+        try:
+            return _extract_summary(json.loads(result))
+        except (json.JSONDecodeError, TypeError):
+            return {"note": "summary なし"}
+    return {"note": "summary なし"}
+
+
 class TraceRecorder:
     """1実行ぶんのトレース。run_id がそのままファイル名になる。"""
 
@@ -87,9 +115,9 @@ class TraceRecorder:
 
     def record_tool_result(self, tool: str, result: Any, *, is_error: bool = False) -> None:
         """要約が必要なツールは、中身ではなく summary を残す。"""
-        if tool in SUMMARY_ONLY_TOOLS and isinstance(result, dict):
+        if _base_tool_name(tool) in SUMMARY_ONLY_TOOLS:
             self._write(
-                "tool_result", tool=tool, summary=result.get("summary", {}), is_error=is_error
+                "tool_result", tool=tool, summary=_extract_summary(result), is_error=is_error
             )
         else:
             self._write("tool_result", tool=tool, result=result, is_error=is_error)

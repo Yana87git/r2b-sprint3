@@ -10,7 +10,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
+import uuid as _uuid
+
 from app.agent import definition
+from app.agent.context import set_current_inquiry_id
 from app.agent.runner import AgentRunResult, run_agent
 from app.agent.trace import TraceRecorder
 
@@ -47,6 +50,8 @@ def start_agent_job(
         attempt_no=attempt_no,
     )
     _jobs[trace.run_id] = job
+    # タスクを作る前に設定する（作成時のコンテキストが子タスクへ伝わる）
+    set_current_inquiry_id(_uuid.UUID(inquiry_id) if inquiry_id else None)
     job.task = asyncio.create_task(_execute(job, prompt, system_prompt=system_prompt, trace=trace))
     return trace.run_id
 
