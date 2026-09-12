@@ -8,7 +8,8 @@
 backend/.env
 
 # エージェントの実行トレース（Slice 0-7 が出力する）
-backend/traces/
+backend/traces/*
+!backend/traces/.gitkeep
 
 # 依存・生成物
 node_modules/
