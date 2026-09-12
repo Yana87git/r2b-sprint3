@@ -123,3 +123,8 @@ class ValueSourceResponse(BaseModel):
     source: dict[str, str] | None
     excerpt: Excerpt | None
     sampling: Sampling
+
+
+class BulkCheckResponse(BaseModel):
+    checked_rows: int = Field(description="この操作で確認済みにした行数")
+    summary: ItemSummary

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.errors import api_error
 from app.api.v1.schemas import (
+    BulkCheckResponse,
     ConfirmResponse,
     ItemListResponse,
     RowCheckResponse,
@@ -139,6 +140,30 @@ async def download_export(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         filename=path.name,
     )
+
+
+@router.post("/{inquiry_id}/items/bulk-check", response_model=BulkCheckResponse)
+async def bulk_check(
+    inquiry_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+) -> BulkCheckResponse:
+    """確信が高い行をまとめて確認済みにする（⑤ #12）。抜き取りが足りなければ 409。"""
+    inquiry = await item_list_service.get_inquiry(session, inquiry_id)
+    if inquiry is None:
+        raise api_error(404, "NOT_FOUND", "案件が見つかりません")
+    if inquiry.status == "confirmed":
+        raise api_error(409, "ALREADY_CONFIRMED", "確定済みの案件は変更できません")
+    try:
+        payload = await item_list_service.bulk_check(session, inquiry_id)
+    except item_list_service.SamplingNotEnoughError as e:
+        raise api_error(
+            409,
+            "SAMPLING_NOT_ENOUGH",
+            f"読み取り元を {e.required} 行ぶん開いてから、まとめて確認してください",
+            sampled_rows=e.sampled,
+            required_samples=e.required,
+        ) from e
+    await session.commit()
+    return BulkCheckResponse(**payload)
 
 
 @router.post("/{inquiry_id}/confirm", response_model=ConfirmResponse)

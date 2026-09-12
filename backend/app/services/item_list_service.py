@@ -219,3 +219,59 @@ def _value_payload(
 
 def _iso(moment: datetime | None) -> str | None:
     return moment.isoformat() if moment else None
+
+
+# 一括確認に必要な抜き取り（⑤ #12・④ と同じ数え方）
+REQUIRED_SAMPLES = 3
+
+
+class SamplingNotEnoughError(Exception):
+    """抜き取りが足りないので一括確認できない（⑤ #12 の 409）。
+
+    **サーバー側で拒否する**（画面のボタンを押せなくするだけにしない。② FUNC-04）。
+    """
+
+    def __init__(self, sampled: int, required: int) -> None:
+        super().__init__("抜き取りが足りません")
+        self.sampled = sampled
+        self.required = required
+
+
+async def bulk_check(session: AsyncSession, inquiry_id: uuid.UUID) -> dict[str, Any]:
+    """確信が高い行をまとめて確認済みにする（⑤ #12）。
+
+    N = 確信が高く、除外していない行（**確認済みかどうかは問わない**）。
+    確認済みを N から除くと、1行ずつ確認するたびに分母が動いて判定が不安定になる。
+    """
+    confident = list(
+        (
+            await session.execute(
+                select(ItemRow).where(
+                    ItemRow.inquiry_id == inquiry_id,
+                    ItemRow.classification == "high_confidence",
+                    ItemRow.excluded_at.is_(None),
+                )
+            )
+        ).scalars()
+    )
+    sampled = sum(1 for r in confident if r.source_opened_at is not None)
+    required = min(REQUIRED_SAMPLES, len(confident))
+    if sampled < required:
+        raise SamplingNotEnoughError(sampled, required)
+
+    user = await UserRepository(session).get_fixed_user()
+    now = datetime.now(timezone.utc)
+    checked = 0
+    for row in confident:
+        if row.check_state == "checked":
+            continue
+        row.check_state = "checked"
+        row.checked_at = now
+        row.checked_by = user.id if user else None
+        checked += 1
+    await session.flush()
+
+    rows = list(
+        (await session.execute(select(ItemRow).where(ItemRow.inquiry_id == inquiry_id))).scalars()
+    )
+    return {"checked_rows": checked, "summary": _summarize(rows)}

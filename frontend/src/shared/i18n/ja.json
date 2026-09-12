@@ -85,7 +85,8 @@
       "model_no": "型番",
       "due_date": "納期"
     },
-    "sampled": "読み取り元を開いた行 {{sampled}} / {{required}}"
+    "sampled": "読み取り元を開いた行 {{sampled}} / {{required}}",
+    "bulkCheck": "まとめて確認済みにする"
   },
   "unreadableReason": {
     "illegible": "判読不能",

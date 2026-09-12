@@ -163,3 +163,12 @@ export function fetchValueSource(
     `/api/v1/inquiries/${inquiryId}/values/${valueId}/source`,
   );
 }
+
+export type BulkCheckResult = { checked_rows: number; summary: ItemSummary };
+
+/** ⑤ #12。抜き取りが足りなければ 409 SAMPLING_NOT_ENOUGH。 */
+export function bulkCheck(inquiryId: string): Promise<BulkCheckResult> {
+  return postJson<BulkCheckResult>(
+    `/api/v1/inquiries/${inquiryId}/items/bulk-check`,
+  );
+}

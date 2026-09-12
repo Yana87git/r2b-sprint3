@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  bulkCheck,
   checkRow,
   confirmInquiry,
   fetchItems,
@@ -56,5 +57,14 @@ export function useValueSource(inquiryId: string, valueId: string) {
       return result;
     },
     staleTime: 0,
+  });
+}
+
+export function useBulkCheck(inquiryId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => bulkCheck(inquiryId),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: itemsKey(inquiryId) }),
   });
 }

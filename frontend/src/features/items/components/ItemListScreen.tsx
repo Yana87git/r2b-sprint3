@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
-import { useCheckRow, useItems } from "../hooks";
+import { ApiError } from "@/shared/api/client";
+import { useBulkCheck, useCheckRow, useItems } from "../hooks";
 import type { Classification, ItemRow } from "../api";
 import { ItemRowLine } from "./ItemRowLine";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -24,6 +25,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const check = useCheckRow(inquiryId);
   const [confirming, setConfirming] = useState(false);
   const [openValueId, setOpenValueId] = useState<string | null>(null);
+  const bulk = useBulkCheck(inquiryId);
 
   if (isPending) return <p className="meta">{t("common.loading")}</p>;
   if (isError) {
@@ -45,6 +47,12 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const excluded = rows.filter((row) => row.excluded);
   const canConfirm =
     summary.unchecked_rows === 0 && summary.unreadable_input_count === 0;
+
+  const requiredSamples = Math.min(
+    3,
+    summary.by_classification.high_confidence ?? 0,
+  );
+  const bulkError = bulk.error instanceof ApiError ? bulk.error : null;
 
   const group = (classifications: Classification[]): ItemRow[] =>
     active.filter((row) => classifications.includes(row.classification));
@@ -141,7 +149,34 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                   <>
                     <tr className="group-row" key={key}>
                       <td colSpan={11}>
-                        {t(`items.groups.${key}`, { n: groupRows.length })}
+                        <span className="inline-row">
+                          {t(`items.groups.${key}`, { n: groupRows.length })}
+                          {key === "confident" ? (
+                            <>
+                              <span className="counter">
+                                {t("items.sampled", {
+                                  sampled: summary.sampled_rows,
+                                  required: requiredSamples,
+                                })}
+                              </span>
+                              <button
+                                className="btn btn-sm"
+                                disabled={
+                                  summary.sampled_rows < requiredSamples ||
+                                  bulk.isPending
+                                }
+                                onClick={() => bulk.mutate()}
+                              >
+                                {t("items.bulkCheck")}
+                              </button>
+                              {bulkError ? (
+                                <span className="error-text">
+                                  {bulkError.message}
+                                </span>
+                              ) : null}
+                            </>
+                          ) : null}
+                        </span>
                       </td>
                     </tr>
                     {groupRows.map((row) => (
@@ -186,15 +221,6 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
 
       <div className="sticky-foot">
         <span className="sub">{t("items.footHint")}</span>
-        <span className="counter">
-          {t("items.sampled", {
-            sampled: summary.sampled_rows,
-            required: Math.min(
-              3,
-              summary.by_classification.high_confidence ?? 0,
-            ),
-          })}
-        </span>
         <div className="spacer" />
         {summary.unchecked_rows > 0 ? (
           <span className="error-text">

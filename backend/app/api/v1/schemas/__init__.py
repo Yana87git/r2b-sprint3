@@ -7,6 +7,7 @@ from app.api.v1.schemas.inquiry import (
     InquiryListResponse,
 )
 from app.api.v1.schemas.item import (
+    BulkCheckResponse,
     ItemListResponse,
     ItemSummary,
     RowCheckResponse,
@@ -16,6 +17,7 @@ from app.api.v1.schemas.run import RunStatusResponse
 
 __all__ = [
     "AcceptedInput",
+    "BulkCheckResponse",
     "ConfirmResponse",
     "InquiryCreateResponse",
     "InquiryListItem",
