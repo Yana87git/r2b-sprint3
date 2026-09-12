@@ -1,23 +1,38 @@
-# macOS
-.DS_Store
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# 秘密情報（絶対にコミットしない）
+# Environment（ANTHROPIC_API_KEY を含む。絶対にコミットしない）
 .env
 .env.*
 !.env.example
 backend/.env
 
-# エージェントの実行トレース（Slice 0-7 が出力する）
+# Frontend
+node_modules/
+.next/
+out/
+
+# Generated
+frontend/src/shared/api/generated/
+backend/openapi.json
+
+# Agent traces（エージェント実行トレース。設計との突き合わせ用ローカルログ）
+# ディレクトリ自体は .gitkeep で残す（クローン直後に backend/traces/ が無いと初回実行が失敗するため）
 backend/traces/*
 !backend/traces/.gitkeep
 
-# 依存・生成物
-node_modules/
-__pycache__/
-*.py[cod]
-.venv/
-.pytest_cache/
-.ruff_cache/
-.next/
-dist/
-build/
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
