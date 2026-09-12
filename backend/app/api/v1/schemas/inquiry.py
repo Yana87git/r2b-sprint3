@@ -13,3 +13,23 @@ class InquiryCreateResponse(BaseModel):
     inquiry_id: str
     inputs: list[AcceptedInput]
     run_id: str = Field(description="自動で始めたエージェント実行のID（attempt_no = 1）")
+
+
+class InquiryListItem(BaseModel):
+    inquiry_id: str
+    title: str
+    status: str
+    unreadable_reason: str | None
+    submitted_at: str
+    submitted_by_name: str
+    formats: list[str]
+    total_rows: int
+    unchecked_rows: int
+    unreadable_input_count: int
+    pending_row_count: int | None = Field(description="確定済みの案件の「顧客回答待ち」の行数")
+    latest_run_id: str | None = Field(description="最後の実行（SCR-04 へ進むときに使う）")
+
+
+class InquiryListResponse(BaseModel):
+    counts: dict[str, int] = Field(description="状況ごとの件数（タブの数字）")
+    inquiries: list[InquiryListItem]

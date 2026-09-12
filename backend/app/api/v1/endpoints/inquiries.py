@@ -6,9 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.errors import api_error
 from app.api.v1.schemas import ConfirmResponse, ItemListResponse, RowCheckResponse
-from app.api.v1.schemas.inquiry import InquiryCreateResponse
+from app.api.v1.schemas.inquiry import InquiryCreateResponse, InquiryListResponse
 from app.core.dependencies import get_db
-from app.services import confirm_service, inquiry_intake_service, item_list_service
+from app.services import (
+    confirm_service,
+    inquiry_intake_service,
+    inquiry_list_service,
+    item_list_service,
+)
 from app.services.inquiry_intake_service import ACCEPTED_MESSAGE, IntakeError, UploadedFile
 
 router = APIRouter(prefix="/inquiries", tags=["Inquiries"])
@@ -49,6 +54,16 @@ async def create_inquiry(
         ],
         run_id=run_id,
     )
+
+
+@router.get("", response_model=InquiryListResponse)
+async def list_inquiries(
+    status: str | None = None, session: AsyncSession = Depends(get_db)
+) -> InquiryListResponse:
+    """引合一覧（⑤ #5）。投入日時の新しい順に全件返す。"""
+    if status is not None and status not in inquiry_list_service.STATUSES:
+        raise api_error(400, "INVALID_STATUS", "状況の指定が不正です")
+    return InquiryListResponse(**await inquiry_list_service.list_inquiries(session, status))
 
 
 @router.get("/{inquiry_id}/items", response_model=ItemListResponse)
