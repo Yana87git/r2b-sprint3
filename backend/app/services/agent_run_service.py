@@ -5,6 +5,8 @@
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy import select
+
 from app.core.database import AsyncSessionLocal
 from app.models import AgentRun, Inquiry
 from app.repositories.agent_run_repository import AgentRunRepository
@@ -76,3 +78,26 @@ async def finish_run(*, run_id: str, stop_reason: str, turns: int | None) -> Non
                 inquiry.status = "unreadable"
                 inquiry.unreadable_reason = unreadable
         await session.commit()
+
+
+async def close_orphaned_runs() -> int:
+    """プロセスが落ちた・再起動したときに残る「実行中」の記録を閉じる。
+
+    実行はプロセス内の asyncio タスクなので、サーバーが再起動すると続きは走らない。
+    記録だけ running のまま残ると、一覧と処理状況が永遠に「読み取り中」に見える。
+    起動時に1度だけ呼び、**failed として閉じる**（案件は読み取り不可にする）。
+    """
+    async with AsyncSessionLocal() as session:
+        runs = list(
+            (await session.execute(select(AgentRun).where(AgentRun.status == "running"))).scalars()
+        )
+        for run in runs:
+            run.status = "finished"
+            run.stop_reason = "failed"
+            run.finished_at = datetime.now(timezone.utc)
+            inquiry = await session.get(Inquiry, run.inquiry_id)
+            if inquiry is not None and inquiry.status in ("received", "reading"):
+                inquiry.status = "unreadable"
+                inquiry.unreadable_reason = "timeout"
+        await session.commit()
+    return len(runs)

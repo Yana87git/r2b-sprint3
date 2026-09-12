@@ -141,5 +141,18 @@
       "size": "サイズ",
       "judgement": "判定結果"
     }
+  },
+  "run": {
+    "title": "処理状況",
+    "inputsDone": "読み終えた入力 {{done}} / {{total}}",
+    "eta": "あと約{{n}}分",
+    "overdue": "目安の時間を過ぎていますが、処理を続けています",
+    "keepsRunning": "画面を離れても読み取りは続きます",
+    "done": "読み取りが終わりました",
+    "doneHint": "内容を確かめてから確定します",
+    "failed": "読み取り不可 — {{reason}}",
+    "backToList": "一覧へ戻る",
+    "startReview": "確認を始める",
+    "openResult": "結果を見る"
   }
 }

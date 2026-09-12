@@ -1,4 +1,8 @@
 """FastAPI アプリケーションの入口。"""
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, select
@@ -8,8 +12,22 @@ from app.core.config import settings
 from app.api.v1.router import api_router
 from app.core.dependencies import get_db
 from app.models import Base, User
+from app.services import agent_run_service
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """起動時に、前のプロセスが残した「実行中」を閉じる（再起動で続きは走らないため）。"""
+    closed = await agent_run_service.close_orphaned_runs()
+    if closed:
+        logger.warning("前のプロセスの実行 %d 件を failed として閉じました", closed)
+    yield
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
