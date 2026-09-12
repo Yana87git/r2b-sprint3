@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+psycopg://r2b:r2b_local_dev@localhost:5432/inquiry"
 
     # CORS（③ の Frontend は Next.js 15 / ポート 3000）
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
+    # 3000 が他のアプリに使われていると Next は 3001 に逃げるので、両方許可しておく
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     # エージェント（Slice 0-7 で使う。値は backend/.env のみに置く）
     ANTHROPIC_API_KEY: str = ""
