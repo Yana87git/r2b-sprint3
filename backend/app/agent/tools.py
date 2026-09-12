@@ -16,7 +16,8 @@ from claude_agent_sdk import create_sdk_mcp_server, tool
 
 from app.agent.context import current_inquiry_id
 from app.core.database import AsyncSessionLocal
-from app.services import inquiry_service, item_draft_service
+from app.services import completion_service, inquiry_service, item_draft_service
+from app.services import source_verify_service
 from app.services.input_reader import DEFAULT_LIMIT, InputNotReadableError, read_input
 
 
@@ -118,7 +119,17 @@ def _error(message: str) -> dict[str, Any]:
 @tool(
     "save_item_rows",
     "品目リスト案を下書きとして保存する。案件のぶんを丸ごと置き換える。"
-    "保存のたびに形式を検査し、誤りがあれば {row_no, field, message} の一覧を返す",
+    "保存のたびに形式を検査し、誤りがあれば {row_no, field, message} の一覧を返す。"
+    "rows の各要素は "
+    '{"row_no":1,"source_input_id":"<入力ID>","values":{'
+    '"item_name":{"raw_text":"深溝玉軸受","value":"深溝玉軸受","state":"extracted",'
+    '"confidence":"high","clues":[],"source":{"input_id":"<入力ID>","locator":"明細!B10"}},'
+    '"part_no":{...},"quantity":{...},"unit":{...},'
+    '"due_date":{"raw_text":"10月末","kind":"fixed|month_range|needs_confirmation",'
+    '"start_date":"2026-10-21","end_date":"2026-10-31","state":"extracted",'
+    '"confidence":"high","clues":[],"source":{...}},"remarks":{...}}} の形。'
+    "必須は item_name / part_no / quantity / unit / due_date の5つ。"
+    "記載がない項目は state を needs_confirmation にし、source は付けない",
     {"rows": list},
 )
 async def save_item_rows(args: dict[str, Any]) -> dict[str, Any]:
@@ -134,7 +145,46 @@ async def save_item_rows(args: dict[str, Any]) -> dict[str, Any]:
     return {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False)}]}
 
 
-AGENT_TOOLS = [ping, list_input_files, read_file_content, save_item_rows]
+@tool(
+    "verify_sources",
+    "保存した値の原文が、読み取り元の位置に本当にあるかを照合し、不一致の一覧を返す",
+    {},
+)
+async def verify_sources(args: dict[str, Any]) -> dict[str, Any]:
+    """§3-4。照合の実体は SourceVerifyService（check_completion の④と同じ処理）。"""
+    inquiry_id = current_inquiry_id()
+    async with AsyncSessionLocal() as session:
+        mismatches = await source_verify_service.verify_all(session, inquiry_id)
+    return {
+        "content": [
+            {"type": "text", "text": json.dumps({"mismatches": mismatches}, ensure_ascii=False)}
+        ]
+    }
+
+
+@tool(
+    "check_completion",
+    "完了条件①〜⑥と失敗条件を判定し、案件の状態を決める。"
+    "未達があれば incomplete と不足の一覧を返す",
+    {},
+)
+async def check_completion(args: dict[str, Any]) -> dict[str, Any]:
+    """§3-6・§4。案件の状態を変えられるのはこのツールだけ。"""
+    inquiry_id = current_inquiry_id()
+    async with AsyncSessionLocal() as session:
+        result = await completion_service.check(session, inquiry_id)
+        await session.commit()
+    return {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False)}]}
+
+
+AGENT_TOOLS = [
+    ping,
+    list_input_files,
+    read_file_content,
+    save_item_rows,
+    verify_sources,
+    check_completion,
+]
 
 agent_server = create_sdk_mcp_server(name="app", version="0.1.0", tools=AGENT_TOOLS)
 
@@ -143,4 +193,6 @@ ALLOWED_TOOL_NAMES = [
     "mcp__app__list_input_files",
     "mcp__app__read_file_content",
     "mcp__app__save_item_rows",
+    "mcp__app__verify_sources",
+    "mcp__app__check_completion",
 ]

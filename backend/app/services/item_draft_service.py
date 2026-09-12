@@ -181,6 +181,14 @@ def _validate_value(
                     )
                 )
             stored["due_kind"] = kind
+            # 表示用のテキスト（納期は value ではなく kind と日付で表すため、ここで作る）
+            if stored["value_text"] is None:
+                if kind == "fixed_date" and stored["due_start"]:
+                    stored["value_text"] = stored["due_start"].isoformat()
+                elif kind == "month_range" and stored["due_start"] and stored["due_end"]:
+                    stored[
+                        "value_text"
+                    ] = f"{stored['due_start'].isoformat()}〜{stored['due_end'].isoformat()}"
             # 保存できない組み合わせは落とす（DB の CHECK に反するため）
             if kind == "month_range" and (stored["due_start"] is None or stored["due_end"] is None):
                 return None, errors
@@ -218,7 +226,11 @@ async def replace_rows(
 
     for index, row in enumerate(rows, start=1):
         row_no = row.get("row_no", index)
-        values_payload = row.get("values") or {}
+        # values の下にまとめる形と、行の直下に並べる形の両方を受ける
+        # （モデルは後者で送ってくることがある。弾くと直しようがなく堂々巡りになる）
+        values_payload = row.get("values") or {
+            key: value for key, value in row.items() if key in FIELD_MAP
+        }
 
         stored_values: list[dict[str, Any]] = []
         for field in ("item_name", "part_no", "quantity", "unit", "due_date", "remarks"):

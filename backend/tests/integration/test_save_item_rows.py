@@ -200,3 +200,14 @@ async def test_classification_and_clues(d1) -> None:
             .all()
         )
         assert [c.clue for c in clues] == ["H2"]
+
+
+async def test_accepts_flat_row_shape(d1) -> None:
+    """values の下でなく、行の直下に値が並ぶ形も受ける（モデルがこの形で送ることがある）。"""
+    inquiry_id, input_id = d1
+    row = _row(input_id)
+    flat = {"row_no": row["row_no"], "source_input_id": row["source_input_id"], **row["values"]}
+    async with AsyncSessionLocal() as session:
+        result = await replace_rows(session, inquiry_id, [flat])
+        await session.commit()
+    assert result == {"saved_rows": 1, "errors": []}
