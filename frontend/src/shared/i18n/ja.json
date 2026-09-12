@@ -154,5 +154,30 @@
     "backToList": "一覧へ戻る",
     "startReview": "確認を始める",
     "openResult": "結果を見る"
+  },
+  "confirm": {
+    "title": "この内容で確定しますか",
+    "lead": "確定すると編集できません。",
+    "counts": "要確認 {{pending}} 行は「顧客回答待ち」として出力されます。除外した {{excluded}} 行は出力しません。",
+    "back": "戻る",
+    "submit": "確定する",
+    "working": "確定しています…",
+    "errors": {
+      "UNCHECKED_ROWS_REMAIN": "未確認の行が残っています。すべて確認してから確定してください",
+      "UNREADABLE_INPUT_REMAINS": "読み取れなかった入力が残っています。除外するか再実行してください",
+      "ALREADY_CONFIRMED": "この案件はすでに確定しています"
+    }
+  },
+  "done": {
+    "stamp": "確定",
+    "stampTitle": "確定済み",
+    "readonly": "確定済み・編集できません",
+    "confirmedAt": "確定 {{at}} ｜ 確定者 {{by}}",
+    "pendingRows": "要確認 {{n}} 行（顧客回答待ち）",
+    "pending": "顧客回答待ち",
+    "download": "品目リスト（Excel）をダウンロード",
+    "downloadHint": "ダウンロードした Excel を、これまでと同じ方法で購買部門に渡してください",
+    "notConfirmed": "この案件はまだ確定していません。",
+    "toReview": "確認画面へ"
   }
 }

@@ -101,3 +101,10 @@ async def confirm(session: AsyncSession, inquiry_id: uuid.UUID) -> dict[str, Any
         "pending_row_count": pending,
         "download_path": f"/api/v1/inquiries/{inquiry_id}/export",
     }
+
+
+async def get_export(session: AsyncSession, inquiry_id: uuid.UUID) -> ItemListExport | None:
+    """出力済みの Excel の記録（⑤ #18）。確定していなければ None。"""
+    return (
+        await session.execute(select(ItemListExport).where(ItemListExport.inquiry_id == inquiry_id))
+    ).scalar_one_or_none()

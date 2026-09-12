@@ -6,7 +6,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Inquiry, InquiryInput, ItemRow, ItemValue, ValueClue
+from app.models import Inquiry, InquiryInput, ItemListExport, ItemRow, ItemValue, User, ValueClue
 from app.repositories.user_repository import UserRepository
 
 # 要確認 → 確信が低い → 確信が高い の順に見せる（③ SCR-05）
@@ -70,14 +70,23 @@ async def get_items(
     # 読み取り元は「見積依頼.xlsx 明細!C12」の形で見せる（③ SCR-05）。
     # 名前の解決はサーバー側でやる（画面が入力の一覧を別に引かなくて済むように）
     input_names = {i.id: i.display_name for i in inputs}
+    names = {u.id: u.display_name for u in (await session.execute(select(User))).scalars()}
 
     shown = _filter_rows(rows, values_by_row, filter_, include_excluded)
     shown.sort(key=lambda r: (CLASSIFICATION_ORDER.get(r.classification, 9), r.row_no))
+
+    export = (
+        await session.execute(select(ItemListExport).where(ItemListExport.inquiry_id == inquiry_id))
+    ).scalar_one_or_none()
 
     return {
         "inquiry_id": str(inquiry_id),
         "title": inquiry.title,
         "status": inquiry.status,
+        "confirmed_at": _iso(inquiry.confirmed_at),
+        "confirmed_by_name": names.get(inquiry.confirmed_by, "") if inquiry.confirmed_by else None,
+        "pending_row_count": export.pending_row_count if export else None,
+        "export_row_count": export.row_count if export else None,
         "review_started_at": _iso(inquiry.review_started_at),
         "inputs": [_input_payload(i) for i in inputs],
         "rows": [

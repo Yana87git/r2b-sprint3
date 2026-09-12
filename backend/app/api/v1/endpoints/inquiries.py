@@ -1,7 +1,9 @@
-"""引合の API（⑤ #4・#9・#11・#17）。認証は今回未実装で、固定ユーザーを使う（① 6章）。"""
+"""引合の API（⑤ #4・#5・#9・#11・#17・#18）。認証は今回未実装で、固定ユーザーを使う（① 6章）。"""
 import uuid
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.errors import api_error
@@ -101,6 +103,24 @@ async def check_row(
         raise api_error(404, "NOT_FOUND", "行が見つかりません")
     await session.commit()
     return RowCheckResponse(**payload)
+
+
+@router.get("/{inquiry_id}/export")
+async def download_export(
+    inquiry_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+) -> FileResponse:
+    """出力済み Excel のダウンロード（⑤ #18）。確定していなければ 404。"""
+    export = await confirm_service.get_export(session, inquiry_id)
+    if export is None:
+        raise api_error(404, "NOT_FOUND", "出力された品目リストがありません")
+    path = Path(export.storage_path)
+    if not path.exists():
+        raise api_error(404, "NOT_FOUND", "出力ファイルが見つかりません")
+    return FileResponse(
+        path,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=path.name,
+    )
 
 
 @router.post("/{inquiry_id}/confirm", response_model=ConfirmResponse)

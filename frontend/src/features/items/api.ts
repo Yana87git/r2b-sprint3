@@ -60,6 +60,10 @@ export type ItemList = {
   title: string;
   status: string;
   review_started_at: string | null;
+  confirmed_at: string | null;
+  confirmed_by_name: string | null;
+  pending_row_count: number | null;
+  export_row_count: number | null;
   inputs: InquiryInput[];
   rows: ItemRow[];
   summary: ItemSummary;
@@ -85,4 +89,23 @@ export function checkRow(
   return postJson<RowCheckResult>(
     `/api/v1/inquiries/${inquiryId}/items/${rowId}/check`,
   );
+}
+
+export type ConfirmResult = {
+  inquiry_id: string;
+  confirmed_at: string;
+  row_count: number;
+  pending_row_count: number;
+  download_path: string;
+};
+
+/** ⑤ #17。409 のときは ApiError の code で理由が分かる。 */
+export function confirmInquiry(inquiryId: string): Promise<ConfirmResult> {
+  return postJson<ConfirmResult>(`/api/v1/inquiries/${inquiryId}/confirm`);
+}
+
+/** ⑤ #18。出力済み Excel の URL（ブラウザにそのまま開かせる）。 */
+export function exportUrl(inquiryId: string): string {
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  return `${base}/api/v1/inquiries/${inquiryId}/export`;
 }

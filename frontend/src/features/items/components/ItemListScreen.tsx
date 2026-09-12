@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { useCheckRow, useItems } from "../hooks";
 import type { Classification, ItemRow } from "../api";
 import { ItemRowLine } from "./ItemRowLine";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const GROUPS: { key: string; classifications: Classification[] }[] = [
   {
@@ -19,6 +21,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const { t } = useTranslation();
   const { data, isPending, isError, error, refetch } = useItems(inquiryId);
   const check = useCheckRow(inquiryId);
+  const [confirming, setConfirming] = useState(false);
 
   if (isPending) return <p className="meta">{t("common.loading")}</p>;
   if (isError) {
@@ -190,10 +193,18 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
             {t("items.unreadableRemain", { n: summary.unreadable_input_count })}
           </span>
         ) : null}
-        <button className="btn btn-primary" disabled={!canConfirm}>
+        <button
+          className="btn btn-primary"
+          disabled={!canConfirm}
+          onClick={() => setConfirming(true)}
+        >
           {t("items.confirm")}
         </button>
       </div>
+
+      {confirming ? (
+        <ConfirmDialog data={data} onClose={() => setConfirming(false)} />
+      ) : null}
     </>
   );
 }

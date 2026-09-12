@@ -64,6 +64,10 @@ class ItemListResponse(BaseModel):
     title: str
     status: str
     review_started_at: str | None
+    confirmed_at: str | None = None
+    confirmed_by_name: str | None = None
+    pending_row_count: int | None = Field(default=None, description="「顧客回答待ち」の行数")
+    export_row_count: int | None = Field(default=None, description="出力した行数")
     inputs: list[InputOut]
     rows: list[ItemRowOut]
     summary: ItemSummary
