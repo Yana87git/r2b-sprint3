@@ -326,7 +326,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
 
 <!-- ============================================================ SCR-01 -->
 <section class="screen" id="SCR-01">
-  <div class="screen-caption"><b>SCR-01 ログイン</b><span>非機能・セキュリティ</span>
+  <div class="screen-caption"><b>SCR-01 ログイン</b><span>FUNC-12</span>
     <span class="variants" data-group="s01">
       <button class="on" data-v="normal">通常</button>
       <button data-v="fail">認証失敗</button>
@@ -435,6 +435,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
       <div class="banner" data-group-item="s03" data-v="mail" hidden><strong>メール本文として読みます</strong><span class="meta">（12 行）</span></div>
 
       <div class="actions">
+        <span class="sub">入力 3件（ファイル2・メール本文1）　<span class="meta">／ 上限10件・合計50MB</span></span>
         <span class="error-text" data-group-item="s03" data-v="ext size count" hidden>受け付けられないファイルを取り消すと、投入できます</span>
         <div class="spacer"></div>
         <a class="btn" href="#SCR-02">キャンセル</a>
@@ -506,9 +507,11 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
         <div class="spacer"></div>
         <div style="text-align:right"><span class="meta">未確認</span><br><b style="font-size:var(--size-xl)">11</b><span class="sub"> / 全 13 行（除外 1）</span></div>
       </div>
+      <p class="meta" style="margin-bottom:6px">投入した入力（ファイルとメール本文）</p>
       <div class="files-strip">
         <span class="file-chip">見積依頼.xlsx <span class="meta">Excel ｜ 11 行を読み取りました</span></span>
         <span class="file-chip">仕様書.pdf <span class="meta">PDF ｜ 2 行を読み取りました</span></span>
+        <span class="file-chip">メール本文 <span class="meta">明細はありませんでした（確定は止まりません）</span></span>
         <span class="file-chip is-error" data-group-item="s05" data-v="partial" hidden>図面.pdf <span class="error-text">読み取れませんでした（判読不能）</span><span class="btn btn-sm">除外</span></span>
       </div>
       <div class="summary">
@@ -570,7 +573,7 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
         <span class="sub">値をクリックすると、読み取り元が開きます</span>
         <div class="spacer"></div>
         <span class="error-text">未確認の行が 11 行あります</span><a class="btn-ghost btn btn-sm" href="#SCR-05">未確認の先頭行へ</a>
-        <span class="error-text" data-group-item="s05" data-v="partial" hidden>読み取れなかったファイルが 1 件あります。除外すると確定できます</span>
+        <span class="error-text" data-group-item="s05" data-v="partial" hidden>読み取れなかった入力が 1 件あります。除外すると確定できます</span>
         <span class="btn btn-primary is-disabled" data-group-item="s05" data-v="work partial">確定する</span>
         <span class="btn btn-primary" data-group-item="s05" data-v="confirm" hidden>確定する</span>
       </div>
