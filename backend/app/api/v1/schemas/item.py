@@ -78,3 +78,48 @@ class RowCheckResponse(BaseModel):
     check_state: str
     checked_at: str | None
     summary: ItemSummary
+
+
+class ExcerptCell(BaseModel):
+    col: str
+    text: str
+    hit: bool
+
+
+class ExcerptRow(BaseModel):
+    no: int
+    text: str | None = None
+    hit: bool | None = None
+    locator: str | None = None
+    cells: list[ExcerptCell] | None = None
+
+
+class Excerpt(BaseModel):
+    kind: str = Field(description="grid（Excel の表）/ lines（PDF・Word・メール本文）")
+    columns: list[str]
+    rows: list[ExcerptRow]
+
+
+class Sampling(BaseModel):
+    sampled_rows: int = Field(description="読み取り元を開いた行の数")
+    required_samples: int = Field(description="一括確認に必要な抜き取り min(3, N)")
+    confident_rows: int = Field(description="N = 確信が高く、除外していない行")
+    opened_now: bool = Field(description="この呼び出しで抜き取りとして記録したか")
+
+
+class ValueSourceResponse(BaseModel):
+    value_id: str
+    row_id: str
+    row_no: int
+    field: str
+    state: str
+    confidence: str
+    raw_text: str | None
+    value_text: str | None
+    due_kind: str | None
+    due_start: str | None
+    due_end: str | None
+    clues: list[ValueClueOut]
+    source: dict[str, str] | None
+    excerpt: Excerpt | None
+    sampling: Sampling

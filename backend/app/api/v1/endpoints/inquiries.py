@@ -7,7 +7,12 @@ from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.errors import api_error
-from app.api.v1.schemas import ConfirmResponse, ItemListResponse, RowCheckResponse
+from app.api.v1.schemas import (
+    ConfirmResponse,
+    ItemListResponse,
+    RowCheckResponse,
+    ValueSourceResponse,
+)
 from app.api.v1.schemas.inquiry import InquiryCreateResponse, InquiryListResponse
 from app.core.dependencies import get_db
 from app.services import (
@@ -15,6 +20,7 @@ from app.services import (
     inquiry_intake_service,
     inquiry_list_service,
     item_list_service,
+    source_excerpt_service,
 )
 from app.services.inquiry_intake_service import ACCEPTED_MESSAGE, IntakeError, UploadedFile
 
@@ -103,6 +109,18 @@ async def check_row(
         raise api_error(404, "NOT_FOUND", "行が見つかりません")
     await session.commit()
     return RowCheckResponse(**payload)
+
+
+@router.get("/{inquiry_id}/values/{value_id}/source", response_model=ValueSourceResponse)
+async def get_value_source(
+    inquiry_id: uuid.UUID, value_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+) -> ValueSourceResponse:
+    """読み取り元と原本の抜粋（⑤ #14）。**この GET は抜き取りの記録も兼ねる。**"""
+    payload = await source_excerpt_service.get_source(session, inquiry_id, value_id)
+    if payload is None:
+        raise api_error(404, "NOT_FOUND", "値が見つかりません")
+    await session.commit()
+    return ValueSourceResponse(**payload)
 
 
 @router.get("/{inquiry_id}/export")

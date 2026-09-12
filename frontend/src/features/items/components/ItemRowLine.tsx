@@ -9,9 +9,10 @@ type Props = {
   row: ItemRow;
   onCheck: (rowId: string) => void;
   disabled: boolean;
+  onOpenSource?: (valueId: string) => void;
 };
 
-export function ItemRowLine({ row, onCheck, disabled }: Props) {
+export function ItemRowLine({ row, onCheck, disabled, onOpenSource }: Props) {
   const { t } = useTranslation();
   const checked = row.check_state === "checked";
   return (
@@ -27,12 +28,37 @@ export function ItemRowLine({ row, onCheck, disabled }: Props) {
       </td>
       <td className="cls">{t(`classification.${row.classification}`)}</td>
       <td>{row.row_no}</td>
-      <ValueCell field="item_name" value={row.values.item_name} />
-      <ValueCell field="model_no" value={row.values.model_no} />
-      <ValueCell field="quantity" value={row.values.quantity} numeric />
-      <ValueCell field="unit" value={row.values.unit} />
-      <ValueCell field="due_date" value={row.values.due_date} />
-      <ValueCell field="note" value={row.values.note} />
+      <ValueCell
+        field="item_name"
+        value={row.values.item_name}
+        onOpenSource={onOpenSource}
+      />
+      <ValueCell
+        field="model_no"
+        value={row.values.model_no}
+        onOpenSource={onOpenSource}
+      />
+      <ValueCell
+        field="quantity"
+        value={row.values.quantity}
+        onOpenSource={onOpenSource}
+        numeric
+      />
+      <ValueCell
+        field="unit"
+        value={row.values.unit}
+        onOpenSource={onOpenSource}
+      />
+      <ValueCell
+        field="due_date"
+        value={row.values.due_date}
+        onOpenSource={onOpenSource}
+      />
+      <ValueCell
+        field="note"
+        value={row.values.note}
+        onOpenSource={onOpenSource}
+      />
       <SourceCell row={row} />
       <td style={{ whiteSpace: "nowrap" }}>
         {checked ? null : (

@@ -13,10 +13,15 @@ function dueText(value: ItemValue): string {
   return value.value_text ?? "";
 }
 
-type Props = { field: string; value?: ItemValue; numeric?: boolean };
+type Props = {
+  field: string;
+  value?: ItemValue;
+  numeric?: boolean;
+  onOpenSource?: (valueId: string) => void;
+};
 
 /** 値ひとつ分のセル。**読み取り元（ファイル名と位置）を値のすぐ下に出す**（KPI7）。 */
-export function ValueCell({ field, value, numeric }: Props) {
+export function ValueCell({ field, value, numeric, onOpenSource }: Props) {
   const { t } = useTranslation();
   if (!value) return <td className={numeric ? "num" : undefined} />;
   if (value.state === "needs_confirmation") {
@@ -34,7 +39,14 @@ export function ValueCell({ field, value, numeric }: Props) {
   return (
     <td className={numeric ? "num" : undefined}>
       <div>
-        <span className="val">{normalized}</span>
+        <span
+          className="val"
+          onClick={() => value.source && onOpenSource?.(value.value_id)}
+          role={value.source ? "button" : undefined}
+          tabIndex={value.source ? 0 : undefined}
+        >
+          {normalized}
+        </span>
         {value.confidence === "low" ? (
           <span className="mark-low">{t("items.low")}</span>
         ) : null}

@@ -109,3 +109,57 @@ export function exportUrl(inquiryId: string): string {
   const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
   return `${base}/api/v1/inquiries/${inquiryId}/export`;
 }
+
+export type ExcerptCell = { col: string; text: string; hit: boolean };
+
+export type ExcerptRow = {
+  no: number;
+  text?: string | null;
+  hit?: boolean | null;
+  locator?: string | null;
+  cells?: ExcerptCell[] | null;
+};
+
+export type Excerpt = {
+  kind: "grid" | "lines";
+  columns: string[];
+  rows: ExcerptRow[];
+};
+
+export type ValueSourceDetail = {
+  value_id: string;
+  row_id: string;
+  row_no: number;
+  field: string;
+  state: "extracted" | "needs_confirmation";
+  confidence: "high" | "low";
+  raw_text: string | null;
+  value_text: string | null;
+  due_kind: string | null;
+  due_start: string | null;
+  due_end: string | null;
+  clues: ValueClue[];
+  source: {
+    input_id: string;
+    input_name: string;
+    format: string;
+    locator_label: string;
+  } | null;
+  excerpt: Excerpt | null;
+  sampling: {
+    sampled_rows: number;
+    required_samples: number;
+    confident_rows: number;
+    opened_now: boolean;
+  };
+};
+
+/** ⑤ #14。**開いた事実が抜き取りとして記録される**（確信が高い行は1回だけ）。 */
+export function fetchValueSource(
+  inquiryId: string,
+  valueId: string,
+): Promise<ValueSourceDetail> {
+  return request<ValueSourceDetail>(
+    `/api/v1/inquiries/${inquiryId}/values/${valueId}/source`,
+  );
+}

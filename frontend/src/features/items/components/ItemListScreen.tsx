@@ -7,6 +7,7 @@ import { useCheckRow, useItems } from "../hooks";
 import type { Classification, ItemRow } from "../api";
 import { ItemRowLine } from "./ItemRowLine";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { SourcePanel } from "./SourcePanel";
 
 const GROUPS: { key: string; classifications: Classification[] }[] = [
   {
@@ -22,6 +23,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const { data, isPending, isError, error, refetch } = useItems(inquiryId);
   const check = useCheckRow(inquiryId);
   const [confirming, setConfirming] = useState(false);
+  const [openValueId, setOpenValueId] = useState<string | null>(null);
 
   if (isPending) return <p className="meta">{t("common.loading")}</p>;
   if (isError) {
@@ -148,6 +150,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                         row={row}
                         onCheck={(rowId) => check.mutate(rowId)}
                         disabled={check.isPending}
+                        onOpenSource={setOpenValueId}
                       />
                     ))}
                   </>
@@ -164,6 +167,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                       row={row}
                       onCheck={(rowId) => check.mutate(rowId)}
                       disabled
+                      onOpenSource={setOpenValueId}
                     />
                   ))}
                 </>
@@ -182,6 +186,15 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
 
       <div className="sticky-foot">
         <span className="sub">{t("items.footHint")}</span>
+        <span className="counter">
+          {t("items.sampled", {
+            sampled: summary.sampled_rows,
+            required: Math.min(
+              3,
+              summary.by_classification.high_confidence ?? 0,
+            ),
+          })}
+        </span>
         <div className="spacer" />
         {summary.unchecked_rows > 0 ? (
           <span className="error-text">
@@ -201,6 +214,14 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
           {t("items.confirm")}
         </button>
       </div>
+
+      {openValueId ? (
+        <SourcePanel
+          inquiryId={inquiryId}
+          valueId={openValueId}
+          onClose={() => setOpenValueId(null)}
+        />
+      ) : null}
 
       {confirming ? (
         <ConfirmDialog data={data} onClose={() => setConfirming(false)} />

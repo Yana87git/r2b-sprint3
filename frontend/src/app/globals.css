@@ -266,3 +266,25 @@ tr.row-excluded td .src-badge { color: var(--text-meta); }
 /* 値の下に読み取り元を出すぶん、主要な列は折り返さずに横スクロールへ逃がす */
 table td, table th { white-space: nowrap; }
 table td .orig { white-space: nowrap; }
+
+/* モックは1画面ずつ並べるため overlay-stage の中に absolute で重ねている。
+   実アプリでは重ねる先が画面全体なので fixed にする（値だけはトークンのまま） */
+.scrim,
+.drawer,
+.dialog {
+  position: fixed;
+  z-index: 20;
+}
+.scrim {
+  inset: 0;
+}
+.drawer {
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+.dialog {
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+}

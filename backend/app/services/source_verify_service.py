@@ -24,11 +24,11 @@ FIELD_LABEL = {
     "note": "remarks",
 }
 
-_EXCEL = re.compile(r"^(?P<sheet>.+)!(?P<col>[A-Z]+)(?P<row>\d+)$")
-_PDF = re.compile(r"^p\.(?P<page>\d+)/(?P<line>\d+)$")
-_WORD_TABLE = re.compile(r"^表(?P<table>\d+)/(?P<row>\d+)/(?P<col>\d+)$")
-_WORD_PARA = re.compile(r"^段落(?P<para>\d+)$")
-_MAIL = re.compile(r"^L(?P<line>\d+)$")
+LOCATOR_EXCEL = re.compile(r"^(?P<sheet>.+)!(?P<col>[A-Z]+)(?P<row>\d+)$")
+LOCATOR_PDF = re.compile(r"^p\.(?P<page>\d+)/(?P<line>\d+)$")
+LOCATOR_WORD_TABLE = re.compile(r"^表(?P<table>\d+)/(?P<row>\d+)/(?P<col>\d+)$")
+LOCATOR_WORD_PARA = re.compile(r"^段落(?P<para>\d+)$")
+LOCATOR_MAIL = re.compile(r"^L(?P<line>\d+)$")
 
 
 def _normalize(text: str) -> str:
@@ -39,17 +39,17 @@ def _normalize(text: str) -> str:
 def _text_at(input_: InquiryInput, locator: str) -> str | None:
     """位置に実際にあるテキストを返す。読めない・位置が不正なら None。"""
     try:
-        if (m := _EXCEL.match(locator)) and input_.format == "excel":
+        if (m := LOCATOR_EXCEL.match(locator)) and input_.format == "excel":
             row = int(m.group("row"))
             result = read_input(input_, sheet=m.group("sheet"), start=row, limit=1)
-        elif (m := _PDF.match(locator)) and input_.format == "pdf":
+        elif (m := LOCATOR_PDF.match(locator)) and input_.format == "pdf":
             line = int(m.group("line"))
             result = read_input(input_, page=int(m.group("page")), start=line, limit=1)
-        elif (m := _WORD_TABLE.match(locator)) or (m := _WORD_PARA.match(locator)):
+        elif (m := LOCATOR_WORD_TABLE.match(locator)) or (m := LOCATOR_WORD_PARA.match(locator)):
             if input_.format != "word":
                 return None
             result = read_input(input_, start=1, limit=300)
-        elif (m := _MAIL.match(locator)) and input_.kind == "mail_body":
+        elif (m := LOCATOR_MAIL.match(locator)) and input_.kind == "mail_body":
             line = int(m.group("line"))
             result = read_input(input_, start=line, limit=1)
         else:
