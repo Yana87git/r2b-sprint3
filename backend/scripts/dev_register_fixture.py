@@ -1,6 +1,6 @@
-"""開発用: D1 を案件として登録する。
+"""開発用: fixtures（D1 / D4 / D5）を案件として登録する。
 
-  uv run python scripts/dev_register_d1.py
+  uv run python scripts/dev_register_fixture.py d5
 """
 import asyncio
 import sys
@@ -12,12 +12,18 @@ from sqlalchemy import select  # noqa: E402
 
 from app.core.database import AsyncSessionLocal, engine  # noqa: E402
 from app.models import InquiryInput  # noqa: E402
-from app.services.dev_fixtures import register_d1  # noqa: E402
+from app.services import dev_fixtures  # noqa: E402
+
+REGISTERS = {
+    "d1": dev_fixtures.register_d1,
+    "d4": dev_fixtures.register_d4,
+    "d5": dev_fixtures.register_d5,
+}
 
 
-async def main() -> None:
+async def main(name: str) -> None:
     async with AsyncSessionLocal() as session:
-        inquiry = await register_d1(session)
+        inquiry = await REGISTERS[name](session)
         await session.commit()
         inputs = (
             (
@@ -36,4 +42,7 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    fixture = sys.argv[1].lower() if len(sys.argv) > 1 else "d1"
+    if fixture not in REGISTERS:
+        raise SystemExit(f"使える fixture: {', '.join(REGISTERS)}")
+    asyncio.run(main(fixture))

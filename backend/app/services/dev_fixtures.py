@@ -84,3 +84,23 @@ async def register_d1(session: AsyncSession) -> Inquiry:
         title="見積依頼.xlsx ほか1件（D1）",
         files=[d1 / "normal_excel.xlsx", d1 / "normal_spec.pdf"],
     )
+
+
+async def register_d4(session: AsyncSession) -> Inquiry:
+    """D4（テキストレイヤの無いスキャン PDF）。判読不能の記録を試すための入力。"""
+    return await register_inquiry_from_files(
+        session,
+        title="スキャンされた引合書（D4）",
+        files=[FIXTURES_DIR / "d4" / "scanned.pdf"],
+    )
+
+
+async def register_d5(session: AsyncSession) -> Inquiry:
+    """D5（あいさつと依頼文だけで明細が無いメール本文）。明細なしの記録を試すための入力。"""
+    body = (FIXTURES_DIR / "d5" / "greeting_mail.txt").read_text(encoding="utf-8")
+    return await register_inquiry_from_files(
+        session,
+        title="お見積のお願い（D5・メール本文のみ）",
+        mail_body=body,
+        files=[],
+    )

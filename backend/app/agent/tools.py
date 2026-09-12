@@ -1,8 +1,7 @@
-"""カスタムツール。
+"""カスタムツール（agent.md「ツール一覧」の6つ + 疎通確認用の ping）。
 
-**本番の6つのツール（list_input_files / read_file_content / save_item_rows /
-verify_sources / set_file_status / check_completion）は明日実装する。**
-Slice 0-7 では、ループとトレースの疎通を確かめるための `ping` だけを置く。
+list_input_files / read_file_content / save_item_rows / verify_sources /
+set_file_status / check_completion。
 
 - ツールは docs/requirements/agent.md「ツール一覧」と1対1で対応させる
 - ツールに生 SQL・生 HTTP を書かない（service / repository を経由する）
@@ -16,8 +15,13 @@ from claude_agent_sdk import create_sdk_mcp_server, tool
 
 from app.agent.context import current_inquiry_id
 from app.core.database import AsyncSessionLocal
-from app.services import completion_service, inquiry_service, item_draft_service
-from app.services import source_verify_service
+from app.services import (
+    completion_service,
+    inquiry_service,
+    input_status_service,
+    item_draft_service,
+    source_verify_service,
+)
 from app.services.input_reader import DEFAULT_LIMIT, InputNotReadableError, read_input
 
 
@@ -163,6 +167,29 @@ async def verify_sources(args: dict[str, Any]) -> dict[str, Any]:
 
 
 @tool(
+    "set_file_status",
+    "明細のない入力・判読できない入力を記録する。"
+    "status は no_items（明細が無い）か illegible（判読できない）のどちらか。"
+    "読み取れなかった理由にこれ以外を使ってはいけない",
+    {"input_id": str, "status": str, "read_up_to": str},
+)
+async def set_file_status(args: dict[str, Any]) -> dict[str, Any]:
+    """§3-5。入力に付く読み取り不可の理由は判読不能のみ。"""
+    inquiry_id = current_inquiry_id()
+    async with AsyncSessionLocal() as session:
+        result = await input_status_service.set_status(
+            session,
+            inquiry_id,
+            args.get("input_id"),
+            args.get("status"),
+            args.get("read_up_to"),
+        )
+        if result.get("ok"):
+            await session.commit()
+    return {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False)}]}
+
+
+@tool(
     "check_completion",
     "完了条件①〜⑥と失敗条件を判定し、案件の状態を決める。"
     "未達があれば incomplete と不足の一覧を返す",
@@ -183,6 +210,7 @@ AGENT_TOOLS = [
     read_file_content,
     save_item_rows,
     verify_sources,
+    set_file_status,
     check_completion,
 ]
 
@@ -194,5 +222,6 @@ ALLOWED_TOOL_NAMES = [
     "mcp__app__read_file_content",
     "mcp__app__save_item_rows",
     "mcp__app__verify_sources",
+    "mcp__app__set_file_status",
     "mcp__app__check_completion",
 ]
