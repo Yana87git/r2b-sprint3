@@ -188,7 +188,11 @@ async def test_get_items_records_review_start_once(api, reviewable) -> None:
     assert first["review_started_at"] is not None
     assert first["summary"]["unchecked_rows"] == 1
     assert first["rows"][0]["values"]["item_name"]["value_text"] == "深溝玉軸受"
-    assert first["rows"][0]["values"]["item_name"]["source"]["locator"] is not None
+    source = first["rows"][0]["values"]["item_name"]["source"]
+    # 画面はこの2つをそのまま「見積依頼.xlsx 明細!B10」と出す
+    assert source["input_name"] == "normal_excel.xlsx"
+    assert source["locator_label"] == "明細!B10"
+    assert [i["display_name"] for i in first["inputs"]] != []
 
     # 2回目は何も変えない（表現は DB 由来で変わりうるので、時刻そのものを比べる）
     second = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()

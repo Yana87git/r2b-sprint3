@@ -15,10 +15,10 @@
  */
 
 // Next.js: ブラウザに公開する環境変数は NEXT_PUBLIC_ プレフィックス（.env.local で設定）
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-let isRefreshing = false
-let refreshPromise: Promise<boolean> | null = null
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
 
 /**
  * トークンをリフレッシュする（cookieベース）
@@ -26,24 +26,24 @@ let refreshPromise: Promise<boolean> | null = null
 async function refreshToken(): Promise<boolean> {
   try {
     const response = await fetch(`${baseURL}/api/v1/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include', // Cookie自動送信
-    })
+      method: "POST",
+      credentials: "include", // Cookie自動送信
+    });
 
     if (response.ok) {
-      return true // リフレッシュ成功
+      return true; // リフレッシュ成功
     } else {
       // リフレッシュ失敗 → ログインページへリダイレクト
-      redirectToLogin()
-      return false
+      redirectToLogin();
+      return false;
     }
   } catch (error) {
-    console.error('Token refresh failed:', error)
-    redirectToLogin()
-    return false
+    console.error("Token refresh failed:", error);
+    redirectToLogin();
+    return false;
   } finally {
-    isRefreshing = false
-    refreshPromise = null
+    isRefreshing = false;
+    refreshPromise = null;
   }
 }
 
@@ -51,7 +51,7 @@ async function refreshToken(): Promise<boolean> {
  * ログインページへリダイレクト
  */
 function redirectToLogin(): void {
-  window.location.href = '/login'
+  window.location.href = "/login";
 }
 
 /**
@@ -72,63 +72,63 @@ export const customInstance = async <T>(
   options?: RequestInit,
 ): Promise<T> => {
   const makeRequest = async (): Promise<Response> => {
-    const headers = new Headers(options?.headers)
+    const headers = new Headers(options?.headers);
 
     // Content-Typeが未設定の場合のみデフォルトを設定
     if (
-      !headers.has('Content-Type') &&
+      !headers.has("Content-Type") &&
       options?.body &&
-      typeof options.body === 'string'
+      typeof options.body === "string"
     ) {
-      headers.set('Content-Type', 'application/json')
+      headers.set("Content-Type", "application/json");
     }
 
     return fetch(`${baseURL}${url}`, {
       ...options,
       headers,
-      credentials: 'include', // Cookie自動送信（重要）
-    })
-  }
+      credentials: "include", // Cookie自動送信（重要）
+    });
+  };
 
-  let response = await makeRequest()
+  let response = await makeRequest();
 
   // 401 Unauthorized処理（トークン自動更新）
   if (response.status === 401) {
     // リフレッシュ中でなければリフレッシュを試行
     if (!isRefreshing) {
-      isRefreshing = true
-      refreshPromise = refreshToken()
+      isRefreshing = true;
+      refreshPromise = refreshToken();
     }
 
     // リフレッシュ完了を待機
-    const refreshed = await refreshPromise
+    const refreshed = await refreshPromise;
 
     if (refreshed) {
       // リフレッシュ成功：リクエストを再試行
-      response = await makeRequest()
+      response = await makeRequest();
     } else {
       // リフレッシュ失敗：ログインページへリダイレクト
-      redirectToLogin()
-      throw new Error('Authentication failed')
+      redirectToLogin();
+      throw new Error("Authentication failed");
     }
   }
 
   // まだ401の場合はリダイレクト
   if (response.status === 401) {
-    redirectToLogin()
-    throw new Error('Authentication failed')
+    redirectToLogin();
+    throw new Error("Authentication failed");
   }
 
   // レスポンスをパース
-  const data = await response.json()
+  const data = await response.json();
 
   // レスポンスオブジェクトを構築
   return {
     data,
     status: response.status,
     headers: response.headers,
-  } as T
-}
+  } as T;
+};
 
 /**
  * エラー型（orval用）
@@ -136,11 +136,11 @@ export const customInstance = async <T>(
  * API呼び出しで発生するエラーの型定義。
  * TanStack Queryのerror型として使用される。
  */
-export type ErrorType<E> = E & { message?: string }
+export type ErrorType<E> = E & { message?: string };
 
 /**
  * Body型（orval用）
  *
  * リクエストボディの型定義。
  */
-export type BodyType<B> = B
+export type BodyType<B> = B;

@@ -1,12 +1,77 @@
 {
-  "app": {
-    "title": "引合書整理エージェント"
-  },
+  "app": { "title": "引合書整理エージェント" },
+  "shell": { "brand": "引合書整理", "user": "中村（営業事務）" },
   "common": {
     "loading": "読み込み中...",
-    "error": "エラーが発生しました"
+    "error": "エラーが発生しました",
+    "retry": "もう一度読み込む"
   },
-  "dashboard": {
-    "placeholder": "画面はこれから作ります（SCR-02 引合一覧）。"
-  }
+  "status": {
+    "received": "受付済み",
+    "reading": "読み取り中",
+    "unreadable": "読み取り不可",
+    "awaiting_review": "確認待ち",
+    "confirmed": "確定済み"
+  },
+  "format": { "excel": "Excel", "pdf": "PDF", "word": "Word", "mail_body": "メール本文" },
+  "inputStatus": {
+    "pending": "まだ読んでいません",
+    "read": "{{rows}} 行を読み取りました",
+    "read_no_items": "明細はありませんでした（確定は止まりません）",
+    "unreadable": "読み取れませんでした"
+  },
+  "unreadable": {
+    "illegible": "読み取れませんでした（判読不能）",
+    "no_items": "明細が見つかりませんでした",
+    "timeout": "時間内に終わりませんでした",
+    "max_turns": "手順が長くなりすぎました"
+  },
+  "classification": {
+    "needs_confirmation": "要確認",
+    "low_confidence": "確信が低い",
+    "high_confidence": "確信が高い"
+  },
+  "clues": {
+    "H1": "ファイル間不一致",
+    "H2": "列内の形式ずれ",
+    "H3": "単位数量の不自然",
+    "H4": "正規化の非一意"
+  },
+  "items": {
+    "backToList": "← 引合一覧",
+    "uncheckedCount": "未確認",
+    "ofRows": "/ 全 {{total}} 行（除外 {{excluded}}）",
+    "inputsLabel": "投入した入力（ファイルとメール本文）",
+    "needsConfirmation": "要確認",
+    "low": "低",
+    "raw": "原文",
+    "checked": "確認済み",
+    "unchecked": "未",
+    "stamp": "済",
+    "check": "確認済みにする",
+    "confirm": "確定する",
+    "empty": "品目リスト案がまだありません。",
+    "errorHint": "バックエンド（http://localhost:8000）が起動しているか確かめてください。",
+    "footHint": "値の右の記号は、そう読み取った手がかりです",
+    "uncheckedRemain": "未確認の行が {{n}} 行あります",
+    "unreadableRemain": "読み取れなかった入力が {{n}} 件あります。除外すると確定できます",
+    "groups": {
+      "attention": "要確認・確信が低い行（1行ずつ確認する）",
+      "confident": "確信が高い行 {{n}} 行",
+      "excluded": "除外した行（Excel に出力しない）"
+    },
+    "columns": {
+      "check": "確認",
+      "classification": "分類",
+      "no": "#",
+      "itemName": "品目名",
+      "modelNo": "型番",
+      "quantity": "数量",
+      "unit": "単位",
+      "dueDate": "納期",
+      "note": "備考",
+      "source": "読み取り元"
+    }
+  },
+  "dashboard": { "placeholder": "画面はこれから作ります（SCR-02 引合一覧）。" }
 }

@@ -5,8 +5,10 @@ from pydantic import BaseModel, Field
 
 
 class ValueSource(BaseModel):
-    input_id: str | None
+    input_id: str
+    input_name: str = Field(description="入力の表示名（例「見積依頼.xlsx」）")
     locator: dict[str, Any] | None = Field(description="形式ごとの位置（④ item_values.locator）")
+    locator_label: str = Field(description="画面に出す位置（例「明細!C12」「p.2/14」）")
 
 
 class ValueClueOut(BaseModel):
@@ -47,10 +49,22 @@ class ItemSummary(BaseModel):
     unreadable_input_count: int = 0
 
 
+class InputOut(BaseModel):
+    input_id: str
+    display_name: str
+    format: str
+    status: str = Field(description="pending / read / read_no_items / unreadable")
+    unreadable_reason: str | None
+    row_count: int
+    excluded: bool
+
+
 class ItemListResponse(BaseModel):
     inquiry_id: str
+    title: str
     status: str
     review_started_at: str | None
+    inputs: list[InputOut]
     rows: list[ItemRowOut]
     summary: ItemSummary
 

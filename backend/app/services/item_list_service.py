@@ -67,16 +67,35 @@ async def get_items(
     summary["unreadable_input_count"] = sum(
         1 for i in inputs if i.status in UNREADABLE_STATUSES and i.excluded_at is None
     )
+    # 読み取り元は「見積依頼.xlsx 明細!C12」の形で見せる（③ SCR-05）。
+    # 名前の解決はサーバー側でやる（画面が入力の一覧を別に引かなくて済むように）
+    input_names = {i.id: i.display_name for i in inputs}
 
     shown = _filter_rows(rows, values_by_row, filter_, include_excluded)
     shown.sort(key=lambda r: (CLASSIFICATION_ORDER.get(r.classification, 9), r.row_no))
 
     return {
         "inquiry_id": str(inquiry_id),
+        "title": inquiry.title,
         "status": inquiry.status,
         "review_started_at": _iso(inquiry.review_started_at),
-        "rows": [_row_payload(r, values_by_row.get(r.id, []), clues_by_value) for r in shown],
+        "inputs": [_input_payload(i) for i in inputs],
+        "rows": [
+            _row_payload(r, values_by_row.get(r.id, []), clues_by_value, input_names) for r in shown
+        ],
         "summary": summary,
+    }
+
+
+def _input_payload(input_: InquiryInput) -> dict[str, Any]:
+    return {
+        "input_id": str(input_.id),
+        "display_name": input_.display_name,
+        "format": input_.format,
+        "status": input_.status,
+        "unreadable_reason": input_.unreadable_reason,
+        "row_count": input_.row_count,
+        "excluded": input_.excluded_at is not None,
     }
 
 
@@ -144,7 +163,10 @@ def _summarize(rows: list[ItemRow]) -> dict[str, Any]:
 
 
 def _row_payload(
-    row: ItemRow, values: list[ItemValue], clues_by_value: dict[uuid.UUID, list[ValueClue]]
+    row: ItemRow,
+    values: list[ItemValue],
+    clues_by_value: dict[uuid.UUID, list[ValueClue]],
+    input_names: dict[uuid.UUID, str],
 ) -> dict[str, Any]:
     return {
         "row_id": str(row.id),
@@ -153,11 +175,15 @@ def _row_payload(
         "check_state": row.check_state,
         "excluded": row.excluded_at is not None,
         "source_opened": row.source_opened_at is not None,
-        "values": {v.field: _value_payload(v, clues_by_value.get(v.id, [])) for v in values},
+        "values": {
+            v.field: _value_payload(v, clues_by_value.get(v.id, []), input_names) for v in values
+        },
     }
 
 
-def _value_payload(value: ItemValue, clues: list[ValueClue]) -> dict[str, Any]:
+def _value_payload(
+    value: ItemValue, clues: list[ValueClue], input_names: dict[uuid.UUID, str]
+) -> dict[str, Any]:
     return {
         "value_id": str(value.id),
         "state": value.state,
@@ -169,8 +195,10 @@ def _value_payload(value: ItemValue, clues: list[ValueClue]) -> dict[str, Any]:
         "due_start": value.due_start.isoformat() if value.due_start else None,
         "due_end": value.due_end.isoformat() if value.due_end else None,
         "source": {
-            "input_id": str(value.source_input_id) if value.source_input_id else None,
+            "input_id": str(value.source_input_id),
+            "input_name": input_names.get(value.source_input_id, ""),
             "locator": value.locator,
+            "locator_label": (value.locator or {}).get("label", ""),
         }
         if value.source_input_id
         else None,
