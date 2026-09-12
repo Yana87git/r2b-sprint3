@@ -19,5 +19,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .next/
-dist/
-build/
+frontend/dist/
+frontend/build/
+backend/dist/
+backend/build/
