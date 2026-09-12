@@ -4,7 +4,6 @@ __pycache__/
 *.pyo
 .venv/
 *.egg-info/
-dist/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -36,3 +35,9 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# ビルド生成物（スラッシュなしの build/ は docs/build/ まで除外してしまうため、配下を明示する）
+frontend/dist/
+frontend/build/
+backend/dist/
+backend/build/
