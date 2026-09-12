@@ -1,0 +1,4 @@
+"""依存注入。"""
+from app.core.database import get_db
+
+__all__ = ["get_db"]

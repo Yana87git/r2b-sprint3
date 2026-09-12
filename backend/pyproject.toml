@@ -16,7 +16,7 @@ dependencies = [
     "pydantic>=2.11.0",
     "pydantic-settings>=2.7.0",
     # Database
-    "sqlalchemy==2.0.23",
+    "sqlalchemy[asyncio]>=2.0.23",
     "psycopg[binary]==3.1.13",
     "alembic==1.13.0",
     # Authentication & Security
@@ -42,3 +42,13 @@ dev = [
 [tool.uv]
 # アプリケーション（配布パッケージではない）。ルートをビルド対象にしない
 package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+# テストデータの生成スクリプトは検査しない（マージで取り込んだ D1〜D7 の生成器）
+exclude = ["tests/fixtures", ".venv", "traces"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

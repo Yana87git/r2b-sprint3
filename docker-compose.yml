@@ -1,0 +1,28 @@
+# ローカル開発用。Sprint 3 で Docker を使うのは DB の起動のみ（① 6章: クラウドへのデプロイはしない）
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: r2b_inquiry_postgres
+    environment:
+      POSTGRES_USER: r2b
+      POSTGRES_PASSWORD: r2b_local_dev
+      POSTGRES_DB: inquiry
+      TZ: Asia/Tokyo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U r2b -d inquiry"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - r2b_network
+
+volumes:
+  postgres_data:
+
+networks:
+  r2b_network:
+    driver: bridge
