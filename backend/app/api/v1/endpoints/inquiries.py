@@ -14,11 +14,16 @@ from app.api.v1.schemas import (
     RowCheckResponse,
     ValueSourceResponse,
 )
-from app.api.v1.schemas.inquiry import InquiryCreateResponse, InquiryListResponse
+from app.api.v1.schemas.inquiry import (
+    InputExclusionResponse,
+    InquiryCreateResponse,
+    InquiryListResponse,
+)
 from app.core.dependencies import get_db
 from app.services import (
     confirm_service,
     inquiry_intake_service,
+    input_exclusion_service,
     inquiry_list_service,
     item_list_service,
     source_excerpt_service,
@@ -122,6 +127,36 @@ async def get_value_source(
         raise api_error(404, "NOT_FOUND", "値が見つかりません")
     await session.commit()
     return ValueSourceResponse(**payload)
+
+
+@router.post("/{inquiry_id}/inputs/{input_id}/exclusion", response_model=InputExclusionResponse)
+async def exclude_input(
+    inquiry_id: uuid.UUID, input_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+) -> InputExclusionResponse:
+    """読み取れなかった入力を除外する（⑤ #15）。手作業で補う、という人の判断。"""
+    try:
+        payload = await input_exclusion_service.exclude(session, inquiry_id, input_id)
+    except input_exclusion_service.ExclusionError as e:
+        raise api_error(409, e.code, e.message) from e
+    if payload is None:
+        raise api_error(404, "NOT_FOUND", "入力が見つかりません")
+    await session.commit()
+    return InputExclusionResponse(**payload)
+
+
+@router.delete("/{inquiry_id}/inputs/{input_id}/exclusion", response_model=InputExclusionResponse)
+async def cancel_input_exclusion(
+    inquiry_id: uuid.UUID, input_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+) -> InputExclusionResponse:
+    """除外を取り消す（⑤ #15）。"""
+    try:
+        payload = await input_exclusion_service.cancel(session, inquiry_id, input_id)
+    except input_exclusion_service.ExclusionError as e:
+        raise api_error(409, e.code, e.message) from e
+    if payload is None:
+        raise api_error(404, "NOT_FOUND", "入力が見つかりません")
+    await session.commit()
+    return InputExclusionResponse(**payload)
 
 
 @router.get("/{inquiry_id}/export")

@@ -86,7 +86,10 @@
       "due_date": "納期"
     },
     "sampled": "読み取り元を開いた行 {{sampled}} / {{required}}",
-    "bulkCheck": "まとめて確認済みにする"
+    "bulkCheck": "まとめて確認済みにする",
+    "excludeInput": "手作業で補う（除外する）",
+    "cancelExclusion": "除外を取り消す",
+    "excludedInput": "除外しました（手作業で補ってください）"
   },
   "unreadableReason": {
     "illegible": "判読不能",

@@ -33,3 +33,11 @@ class InquiryListItem(BaseModel):
 class InquiryListResponse(BaseModel):
     counts: dict[str, int] = Field(description="状況ごとの件数（タブの数字）")
     inquiries: list[InquiryListItem]
+
+
+class InputExclusionResponse(BaseModel):
+    input_id: str
+    display_name: str
+    status: str
+    unreadable_reason: str | None
+    excluded: bool = Field(description="除外したか（確定の判定で数えない）")

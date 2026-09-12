@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { ApiError } from "@/shared/api/client";
-import { useBulkCheck, useCheckRow, useItems } from "../hooks";
+import { useBulkCheck, useCheckRow, useExcludeInput, useItems } from "../hooks";
 import type { Classification, ItemRow } from "../api";
 import { ItemRowLine } from "./ItemRowLine";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -26,6 +26,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const [confirming, setConfirming] = useState(false);
   const [openValueId, setOpenValueId] = useState<string | null>(null);
   const bulk = useBulkCheck(inquiryId);
+  const exclusion = useExcludeInput(inquiryId);
 
   if (isPending) return <p className="meta">{t("common.loading")}</p>;
   if (isError) {
@@ -45,8 +46,9 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const { summary, rows, inputs } = data;
   const active = rows.filter((row) => !row.excluded);
   const excluded = rows.filter((row) => row.excluded);
-  const canConfirm =
-    summary.unchecked_rows === 0 && summary.unreadable_input_count === 0;
+  // 未確認が残っている間は押させない。読み取れなかった入力は**サーバー側に拒否させる**
+  // （409 UNREADABLE_INPUT_REMAINS を確認ダイアログに出す。除外すれば確定できる、と伝わる）
+  const canConfirm = summary.unchecked_rows === 0;
 
   const requiredSamples = Math.min(
     3,
@@ -90,14 +92,35 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
           <span
             key={input.input_id}
             className={
-              input.status === "unreadable" ? "file-chip is-error" : "file-chip"
+              input.status === "unreadable" && !input.excluded
+                ? "file-chip is-error"
+                : "file-chip"
             }
+            style={input.excluded ? { opacity: 0.55 } : undefined}
           >
             {input.display_name}
             {input.status === "unreadable" ? (
-              <span className="error-text">
-                {t(`unreadable.${input.unreadable_reason ?? "illegible"}`)}
-              </span>
+              <>
+                <span className={input.excluded ? "meta" : "error-text"}>
+                  {input.excluded
+                    ? t("items.excludedInput")
+                    : t(`unreadable.${input.unreadable_reason ?? "illegible"}`)}
+                </span>
+                <button
+                  className="btn btn-sm"
+                  disabled={exclusion.isPending}
+                  onClick={() =>
+                    exclusion.mutate({
+                      inputId: input.input_id,
+                      excluded: !input.excluded,
+                    })
+                  }
+                >
+                  {input.excluded
+                    ? t("items.cancelExclusion")
+                    : t("items.excludeInput")}
+                </button>
+              </>
             ) : (
               <span className="meta">
                 {t(`format.${input.format}`)} ｜{" "}

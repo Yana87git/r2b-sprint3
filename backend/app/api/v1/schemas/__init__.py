@@ -2,6 +2,7 @@
 from app.api.v1.schemas.confirm import ConfirmResponse
 from app.api.v1.schemas.inquiry import (
     AcceptedInput,
+    InputExclusionResponse,
     InquiryCreateResponse,
     InquiryListItem,
     InquiryListResponse,
@@ -19,6 +20,7 @@ __all__ = [
     "AcceptedInput",
     "BulkCheckResponse",
     "ConfirmResponse",
+    "InputExclusionResponse",
     "InquiryCreateResponse",
     "InquiryListItem",
     "InquiryListResponse",

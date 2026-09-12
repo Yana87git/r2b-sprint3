@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   bulkCheck,
   checkRow,
+  excludeInput,
   confirmInquiry,
   fetchItems,
   type ConfirmResult,
@@ -64,6 +65,21 @@ export function useBulkCheck(inquiryId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => bulkCheck(inquiryId),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: itemsKey(inquiryId) }),
+  });
+}
+
+export function useExcludeInput(inquiryId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      inputId,
+      excluded,
+    }: {
+      inputId: string;
+      excluded: boolean;
+    }) => excludeInput(inquiryId, inputId, excluded),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: itemsKey(inquiryId) }),
   });

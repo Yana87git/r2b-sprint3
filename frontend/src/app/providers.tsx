@@ -72,7 +72,8 @@ export function Providers({ children }: { children: ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: { retry: 1, refetchOnWindowFocus: false },
-          mutations: { retry: 1 },
+          // 409（未確認が残っている等）を再送しても意味がないので、変更系は再試行しない
+          mutations: { retry: false },
         },
       }),
   );

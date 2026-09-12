@@ -172,3 +172,23 @@ export function bulkCheck(inquiryId: string): Promise<BulkCheckResult> {
     `/api/v1/inquiries/${inquiryId}/items/bulk-check`,
   );
 }
+
+export type InputExclusion = {
+  input_id: string;
+  display_name: string;
+  status: string;
+  unreadable_reason: string | null;
+  excluded: boolean;
+};
+
+/** ⑤ #15。読み取れなかった入力を除外する／取り消す。 */
+export function excludeInput(
+  inquiryId: string,
+  inputId: string,
+  excluded: boolean,
+): Promise<InputExclusion> {
+  return request<InputExclusion>(
+    `/api/v1/inquiries/${inquiryId}/inputs/${inputId}/exclusion`,
+    { method: excluded ? "POST" : "DELETE" },
+  );
+}
