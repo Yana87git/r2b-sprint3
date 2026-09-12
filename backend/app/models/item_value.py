@@ -43,10 +43,14 @@ class ItemValue(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     due_end: Mapped[date | None] = mapped_column(Date, nullable=True)
     confidence: Mapped[str] = mapped_column(String(8), nullable=False)
     source_input_id: Mapped[uuid.UUID | None] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("inquiry_inputs.id"), nullable=True
+        PGUUID(as_uuid=True),
+        ForeignKey("inquiry_inputs.id", ondelete="CASCADE"),
+        nullable=True,
     )
     # 形式ごとの位置: Excel {"sheet","cell"} / PDF {"page","line"} / Word {"table","row","col"} or {"paragraph"} / メール {"line"}
-    locator: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # none_as_null: None を JSON の null ではなく SQL の NULL として入れる
+    # （そうしないと CHECK の locator IS NULL が成り立たない）
+    locator: Mapped[dict | None] = mapped_column(JSONB(none_as_null=True), nullable=True)
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (

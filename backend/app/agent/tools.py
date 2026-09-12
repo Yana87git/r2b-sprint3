@@ -16,7 +16,7 @@ from claude_agent_sdk import create_sdk_mcp_server, tool
 
 from app.agent.context import current_inquiry_id
 from app.core.database import AsyncSessionLocal
-from app.services import inquiry_service
+from app.services import inquiry_service, item_draft_service
 from app.services.input_reader import DEFAULT_LIMIT, InputNotReadableError, read_input
 
 
@@ -115,7 +115,26 @@ def _error(message: str) -> dict[str, Any]:
     }
 
 
-AGENT_TOOLS = [ping, list_input_files, read_file_content]
+@tool(
+    "save_item_rows",
+    "品目リスト案を下書きとして保存する。案件のぶんを丸ごと置き換える。"
+    "保存のたびに形式を検査し、誤りがあれば {row_no, field, message} の一覧を返す",
+    {"rows": list},
+)
+async def save_item_rows(args: dict[str, Any]) -> dict[str, Any]:
+    """§3-3。**検査で誤りが出ても保存する**（直して同じ行を送り直す前提）。"""
+    inquiry_id = current_inquiry_id()
+    rows = args.get("rows")
+    if not isinstance(rows, list):
+        return _error("rows は配列です")
+
+    async with AsyncSessionLocal() as session:
+        result = await item_draft_service.replace_rows(session, inquiry_id, rows)
+        await session.commit()
+    return {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False)}]}
+
+
+AGENT_TOOLS = [ping, list_input_files, read_file_content, save_item_rows]
 
 agent_server = create_sdk_mcp_server(name="app", version="0.1.0", tools=AGENT_TOOLS)
 
@@ -123,4 +142,5 @@ ALLOWED_TOOL_NAMES = [
     "mcp__app__ping",
     "mcp__app__list_input_files",
     "mcp__app__read_file_content",
+    "mcp__app__save_item_rows",
 ]
