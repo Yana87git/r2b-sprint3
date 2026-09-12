@@ -78,7 +78,11 @@ async def main(name: str, clean: bool) -> None:
             .scalars()
             .all()
         )
+        by_classification: dict[str, int] = {}
+        for row in rows:
+            by_classification[row.classification] = by_classification.get(row.classification, 0) + 1
         print(f"案件の状態: {saved.status} / 理由: {saved.unreadable_reason} / 行数: {len(rows)}")
+        print(f"分類: {by_classification}")
         for i in inputs:
             print(
                 f"  - {i.display_name}: {i.status} / 理由 {i.unreadable_reason} / {i.row_count}行"
