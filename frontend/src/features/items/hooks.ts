@@ -9,6 +9,7 @@ import {
   fetchItems,
   type ConfirmResult,
   fetchValueSource,
+  uncheckRow,
   updateRow,
   type ItemList,
   type ItemValueUpdate,
@@ -27,7 +28,9 @@ export function useItems(inquiryId: string) {
 export function useCheckRow(inquiryId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (rowId: string) => checkRow(inquiryId, rowId),
+    // チェックボックスなので、入れる／外すの両方を1つのフックで扱う
+    mutationFn: ({ rowId, checked }: { rowId: string; checked: boolean }) =>
+      checked ? checkRow(inquiryId, rowId) : uncheckRow(inquiryId, rowId),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: itemsKey(inquiryId) }),
   });

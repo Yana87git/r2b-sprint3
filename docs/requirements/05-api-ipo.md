@@ -23,7 +23,7 @@
 | 8 | `/runs/{run_id}` | GET | 実行の進み具合と停止理由（FUNC-03） | 要 | 営業事務 |
 | 9 | `/inquiries/{inquiry_id}/items` | GET | 品目リスト案。要確認だけの絞り込みもできる（FUNC-04 / FUNC-05） | 要 | 営業事務 |
 | 10 | `/inquiries/{inquiry_id}/items/{row_id}` | PATCH | 行の値の修正（FUNC-05） | 要 | 営業事務 |
-| 11 | `/inquiries/{inquiry_id}/items/{row_id}/check` | POST | 行を確認済みにする（FUNC-04） | 要 | 営業事務 |
+| 11 | `/inquiries/{inquiry_id}/items/{row_id}/check` | POST / DELETE | 行を確認済みにする・**取り消す**（FUNC-04） | 要 | 営業事務 |
 | 12 | `/inquiries/{inquiry_id}/items/bulk-check` | POST | 確信が高い行をまとめて確認済みにする（FUNC-04） | 要 | 営業事務 |
 | 13 | `/inquiries/{inquiry_id}/items/{row_id}/exclusion` | POST / DELETE | 行の除外と取り消し（FUNC-05） | 要 | 営業事務 |
 | 14 | `/inquiries/{inquiry_id}/values/{value_id}/source` | GET | 読み取り元と原本の抜粋。抜き取りの記録も兼ねる（FUNC-04） | 要 | 営業事務 |
@@ -278,6 +278,23 @@ files と mail_body の**少なくとも一方**が必要。合計は入力10件
 |-----------|------|------------|
 | 409 | 要確認の値には読み取り元がない（SCR-05 はそもそもパネルを開かない） | `NO_SOURCE_FOR_VALUE` |
 | 422 | 原本の該当箇所を取り出せない（位置は返す） | `EXCERPT_UNAVAILABLE` |
+
+### 行の確認と取り消し
+
+- **Method**: POST / DELETE ／ **Path**: `/api/v1/inquiries/{inquiry_id}/items/{row_id}/check` ／ **目的**: 行を確認済みにする・確認済みを取り消す
+- **認証**: 要 ／ **必要権限**: 営業事務 ／ **対応テーブル(④)**: `item_rows` ／ **対応フロー**: FLOW-03
+- **スキーマ（型のSSOT）**: `schemas/item_row_check`（oval）
+
+POST は `check_state` を `checked` にし、`checked_at` / `checked_by` を記録する。すでに確認済みの行をもう一度押しても時刻は動かさない。
+**DELETE は確認済みを取り消す**（`check_state` を `unchecked` に戻し、時刻と操作者を消す）。どちらも応答に未確認の数を含む集計を返す。
+
+**DELETE が必要な理由**: 画面の確認操作は**チェックボックス**なので、外せるのが当たり前の見た目になっている。取り消せないと、押し間違えた人が戻せずに戸惑う（③ SCR-05）。
+
+#### レスポンス（エラー）
+
+| ステータス | 意味 | エラーコード |
+|-----------|------|------------|
+| 409 | 確定済みの案件は変更できない | `ALREADY_CONFIRMED` |
 
 ### 一括確認
 

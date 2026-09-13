@@ -288,3 +288,18 @@ table td .orig { white-space: nowrap; }
   left: 50%;
   transform: translateX(-50%);
 }
+
+/* 確認済みの行の目印。一覧でどこまで進んだかが見えるように、左端に帯を出す
+   （色は検印と同じ main-700。朱はトークンでは error 専用のため使わない） */
+tr.row-checked td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--main-700);
+}
+tr.row-checked td {
+  background: var(--surface);
+}
+td.check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--main-700);
+  cursor: pointer;
+}

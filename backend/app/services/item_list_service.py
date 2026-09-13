@@ -112,6 +112,20 @@ async def get_inquiry(session: AsyncSession, inquiry_id: uuid.UUID) -> Inquiry |
     return await session.get(Inquiry, inquiry_id)
 
 
+async def uncheck_row(
+    session: AsyncSession, inquiry_id: uuid.UUID, row_id: uuid.UUID
+) -> dict[str, Any] | None:
+    """確認済みを取り消す（⑤ #11 の DELETE）。チェックは外せるのが当たり前なので用意する。"""
+    row = await session.get(ItemRow, row_id)
+    if row is None or row.inquiry_id != inquiry_id:
+        return None
+    row.check_state = "unchecked"
+    row.checked_at = None
+    row.checked_by = None
+    await session.flush()
+    return await _row_result(session, inquiry_id, row)
+
+
 async def check_row(
     session: AsyncSession, inquiry_id: uuid.UUID, row_id: uuid.UUID
 ) -> dict[str, Any] | None:
@@ -125,7 +139,10 @@ async def check_row(
         row.checked_at = datetime.now(timezone.utc)
         row.checked_by = user.id if user else None
     await session.flush()
+    return await _row_result(session, inquiry_id, row)
 
+
+async def _row_result(session: AsyncSession, inquiry_id: uuid.UUID, row: ItemRow) -> dict[str, Any]:
     rows = list(
         (await session.execute(select(ItemRow).where(ItemRow.inquiry_id == inquiry_id))).scalars()
     )

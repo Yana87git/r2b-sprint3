@@ -284,3 +284,27 @@ async def test_rows_are_deleted_with_inquiry(api, created) -> None:
             .all()
         )
     assert count == 0
+
+
+async def test_uncheck_row_puts_it_back(api, reviewable) -> None:
+    """チェックは外せる（⑤ #11 の DELETE）。未確認の数が1つ増える。"""
+    rows = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()["rows"]
+    row_id = rows[0]["row_id"]
+    await api.post(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
+
+    response = await api.delete(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["check_state"], body["checked_at"]) == ("unchecked", None)
+    assert body["summary"]["unchecked_rows"] == 1
+
+
+async def test_uncheck_after_confirm_is_rejected(api, reviewable) -> None:
+    rows = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()["rows"]
+    row_id = rows[0]["row_id"]
+    await api.post(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
+    await api.post(f"/api/v1/inquiries/{reviewable}/confirm")
+
+    response = await api.delete(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "ALREADY_CONFIRMED"

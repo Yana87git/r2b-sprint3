@@ -81,6 +81,17 @@ export function fetchItems(inquiryId: string): Promise<ItemList> {
   return request<ItemList>(`/api/v1/inquiries/${inquiryId}/items`);
 }
 
+/** ⑤ #11（DELETE）。確認済みを取り消す。 */
+export function uncheckRow(
+  inquiryId: string,
+  rowId: string,
+): Promise<RowCheckResult> {
+  return request<RowCheckResult>(
+    `/api/v1/inquiries/${inquiryId}/items/${rowId}/check`,
+    { method: "DELETE" },
+  );
+}
+
 /** ⑤ #11。 */
 export function checkRow(
   inquiryId: string,

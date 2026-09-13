@@ -208,6 +208,26 @@ async def download_export(
     )
 
 
+@router.delete("/{inquiry_id}/items/{row_id}/check", response_model=RowCheckResponse)
+async def uncheck_row(
+    inquiry_id: uuid.UUID,
+    row_id: uuid.UUID,
+    session: AsyncSession = Depends(get_db),
+) -> RowCheckResponse:
+    """確認済みを取り消す（⑤ #11 の DELETE）。"""
+    inquiry = await item_list_service.get_inquiry(session, inquiry_id)
+    if inquiry is None:
+        raise api_error(404, "NOT_FOUND", "案件が見つかりません")
+    if inquiry.status == "confirmed":
+        raise api_error(409, "ALREADY_CONFIRMED", "確定済みの案件は変更できません")
+
+    payload = await item_list_service.uncheck_row(session, inquiry_id, row_id)
+    if payload is None:
+        raise api_error(404, "NOT_FOUND", "行が見つかりません")
+    await session.commit()
+    return RowCheckResponse(**payload)
+
+
 @router.post("/{inquiry_id}/items/bulk-check", response_model=BulkCheckResponse)
 async def bulk_check(
     inquiry_id: uuid.UUID, session: AsyncSession = Depends(get_db)

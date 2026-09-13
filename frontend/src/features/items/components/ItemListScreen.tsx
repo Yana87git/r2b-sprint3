@@ -154,6 +154,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
             <thead>
               <tr>
                 <th>{t("items.columns.check")}</th>
+                <th />
                 <th>{t("items.columns.classification")}</th>
                 <th>{t("items.columns.no")}</th>
                 <th>{t("items.columns.itemName")}</th>
@@ -163,7 +164,6 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                 <th>{t("items.columns.dueDate")}</th>
                 <th>{t("items.columns.note")}</th>
                 <th>{t("items.columns.source")}</th>
-                <th />
               </tr>
             </thead>
             <tbody>
@@ -208,7 +208,9 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                       <ItemRowLine
                         key={row.row_id}
                         row={row}
-                        onCheck={(rowId) => check.mutate(rowId)}
+                        onToggleCheck={(rowId, checked) =>
+                          check.mutate({ rowId, checked })
+                        }
                         disabled={check.isPending}
                         onOpenSource={setOpenValueId}
                         onEdit={setEditing}
@@ -226,7 +228,9 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                     <ItemRowLine
                       key={row.row_id}
                       row={row}
-                      onCheck={(rowId) => check.mutate(rowId)}
+                      onToggleCheck={(rowId, checked) =>
+                        check.mutate({ rowId, checked })
+                      }
                       disabled
                       onOpenSource={setOpenValueId}
                     />

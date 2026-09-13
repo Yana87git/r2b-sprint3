@@ -7,31 +7,50 @@ import { ValueCell } from "./ValueCell";
 
 type Props = {
   row: ItemRow;
-  onCheck: (rowId: string) => void;
+  onToggleCheck: (rowId: string, checked: boolean) => void;
   disabled: boolean;
   onOpenSource?: (valueId: string) => void;
   onEdit?: (row: ItemRow) => void;
 };
 
+/**
+ * 品目リスト案の1行。
+ * 確認はチェックボックス（外せる）。**確認済みの行は左端に帯を出す** —
+ * チェックだけだと、一覧でどこまで進んだかが見えないため（③ SCR-05）。
+ */
 export function ItemRowLine({
   row,
-  onCheck,
+  onToggleCheck,
   disabled,
   onOpenSource,
   onEdit,
 }: Props) {
   const { t } = useTranslation();
   const checked = row.check_state === "checked";
+  const className = [
+    row.excluded ? "row-excluded" : "",
+    checked ? "row-checked" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <tr className={row.excluded ? "row-excluded" : undefined}>
+    <tr className={className || undefined}>
       <td className="check">
-        {checked ? (
-          <span className="stamp" title={t("items.checked")}>
-            {t("items.stamp")}
-          </span>
-        ) : (
-          t("items.unchecked")
-        )}
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled || row.excluded}
+          aria-label={t("items.check")}
+          onChange={(e) => onToggleCheck(row.row_id, e.target.checked)}
+        />
+      </td>
+      <td>
+        {onEdit && !row.excluded ? (
+          <button className="btn btn-sm" onClick={() => onEdit(row)}>
+            {t("items.edit")}
+          </button>
+        ) : null}
       </td>
       <td className="cls">{t(`classification.${row.classification}`)}</td>
       <td>{row.row_no}</td>
@@ -67,22 +86,6 @@ export function ItemRowLine({
         onOpenSource={onOpenSource}
       />
       <SourceCell row={row} />
-      <td style={{ whiteSpace: "nowrap" }}>
-        {checked ? null : (
-          <button
-            className="btn btn-sm"
-            onClick={() => onCheck(row.row_id)}
-            disabled={disabled}
-          >
-            {t("items.check")}
-          </button>
-        )}{" "}
-        {onEdit && !row.excluded ? (
-          <button className="btn btn-sm" onClick={() => onEdit(row)}>
-            {t("items.edit")}
-          </button>
-        ) : null}
-      </td>
     </tr>
   );
 }
