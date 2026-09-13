@@ -260,6 +260,7 @@ async def replace_rows(
         await session.flush()
         saved_rows += 1
 
+        cited_inputs: set[uuid.UUID] = set()
         for stored in stored_values:
             clues = stored.pop("clues")
             value = ItemValue(item_row_id=item_row.id, **stored)
@@ -268,9 +269,10 @@ async def replace_rows(
             for clue in clues:
                 session.add(ValueClue(item_value_id=value.id, clue=clue))
             if stored["source_input_id"] is not None:
-                rows_per_input[stored["source_input_id"]] = (
-                    rows_per_input.get(stored["source_input_id"], 0) + 1
-                )
+                cited_inputs.add(stored["source_input_id"])
+        # **行の数**を数える（値の数ではない）。1行の中で同じ入力を何度引いても1行
+        for input_id in cited_inputs:
+            rows_per_input[input_id] = rows_per_input.get(input_id, 0) + 1
 
     # 「読み取り済み」は保存した行の読み取り元から自動で決まる（§3-3）
     for input_ in inputs:

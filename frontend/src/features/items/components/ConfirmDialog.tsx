@@ -18,6 +18,7 @@ export function ConfirmDialog({ data, onClose }: Props) {
 
   const needsConfirmation =
     data.summary.by_classification.needs_confirmation ?? 0;
+  const excludedInputs = data.inputs.filter((input) => input.excluded);
   const error = confirm.error instanceof ApiError ? confirm.error : null;
 
   return (
@@ -32,6 +33,13 @@ export function ConfirmDialog({ data, onClose }: Props) {
             excluded: data.summary.excluded_rows,
           })}
         </p>
+        {excludedInputs.length > 0 ? (
+          <p style={{ marginTop: 6 }}>
+            {t("confirm.excludedInputs", {
+              names: excludedInputs.map((i) => i.display_name).join("・"),
+            })}
+          </p>
+        ) : null}
         {error ? (
           <p className="error-text" style={{ marginTop: 10 }}>
             {t(`confirm.errors.${error.code}`, { defaultValue: error.message })}

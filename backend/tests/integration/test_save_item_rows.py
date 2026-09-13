@@ -211,3 +211,14 @@ async def test_accepts_flat_row_shape(d1) -> None:
         result = await replace_rows(session, inquiry_id, [flat])
         await session.commit()
     assert result == {"saved_rows": 1, "errors": []}
+
+
+async def test_row_count_counts_rows_not_values(d1) -> None:
+    """入力の「N 行を読み取りました」は**行の数**（値の数ではない）。"""
+    inquiry_id, excel_id = d1
+    async with AsyncSessionLocal() as session:
+        await replace_rows(session, inquiry_id, [_row(excel_id, n) for n in range(1, 4)])
+        await session.commit()
+        saved = await session.get(InquiryInput, excel_id)
+    # 3行 × 5項目 = 15値だが、数えるのは3行
+    assert saved.row_count == 3

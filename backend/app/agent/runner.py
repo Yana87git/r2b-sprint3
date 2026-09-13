@@ -25,6 +25,7 @@ from claude_agent_sdk import (
 
 from app.agent import definition
 from app.agent.tools import ALLOWED_TOOL_NAMES, agent_server
+from app.agent.context import last_completion, set_last_completion
 from app.agent.trace import TraceRecorder
 
 
@@ -73,6 +74,7 @@ async def run_agent(
     """1実行。trace は jobs.py が run_id を先に確定させるために注入する。"""
     trace = trace or TraceRecorder()
     result = AgentRunResult(run_id=trace.run_id)
+    set_last_completion(None)  # 前の実行の結果を持ち越さない
     started = time.monotonic()
 
     trace.record_run_start(
@@ -143,5 +145,17 @@ async def run_agent(
         return result
 
     result.elapsed_s = time.monotonic() - started
-    trace.record_run_end(result.stop_reason, turns=result.turns or turn, elapsed_s=result.elapsed_s)
+    # agent.md「停止理由と FUNC-07・SCR-10 の理由の対応」:
+    # 全入力が読み取り不可・明細が0行は **失敗（中断）** であり、stop_reason は failed。
+    # エージェントが手順をやり切っていても、正常完了とは区別する（SCR-10 の導線がこれで決まる）
+    completion = last_completion()
+    if result.stop_reason == "completed" and (completion or "").startswith("failed"):
+        result.stop_reason = "failed"
+        result.output = completion
+    trace.record_run_end(
+        result.stop_reason,
+        turns=result.turns or turn,
+        elapsed_s=result.elapsed_s,
+        detail=completion if result.stop_reason == "failed" else None,
+    )
     return result

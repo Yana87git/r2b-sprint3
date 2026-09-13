@@ -94,7 +94,8 @@
     "openSourceFirst": "読み取り元を開くと確認できます",
     "openMoreSources": "あと {{n}} 行の読み取り元を開いてください。値をクリックすると開きます",
     "selectAllConfident": "確信が高い行をまとめて確認済みにする",
-    "pendingList": "要確認一覧（{{n}} 項目）"
+    "pendingList": "要確認一覧（{{n}} 項目）",
+    "notInDocument": "引合書に記載がありません"
   },
   "unreadableReason": {
     "illegible": "判読不能",
@@ -180,7 +181,8 @@
       "UNCHECKED_ROWS_REMAIN": "未確認の行が残っています。すべて確認してから確定してください",
       "UNREADABLE_INPUT_REMAINS": "読み取れなかった入力が残っています。除外するか再実行してください",
       "ALREADY_CONFIRMED": "この案件はすでに確定しています"
-    }
+    },
+    "excludedInputs": "{{names}} は除外しました（手作業で補ってください）。"
   },
   "done": {
     "stamp": "確定",

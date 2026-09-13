@@ -13,7 +13,7 @@ from typing import Any
 
 from claude_agent_sdk import create_sdk_mcp_server, tool
 
-from app.agent.context import current_inquiry_id
+from app.agent.context import current_inquiry_id, set_last_completion
 from app.core.database import AsyncSessionLocal
 from app.services import (
     completion_service,
@@ -201,6 +201,8 @@ async def check_completion(args: dict[str, Any]) -> dict[str, Any]:
     async with AsyncSessionLocal() as session:
         result = await completion_service.check(session, inquiry_id)
         await session.commit()
+    # 失敗（判読不能・明細なし）なら、実行の停止理由も failed にする（agent.md 停止条件）
+    set_last_completion(str(result.get("result")))
     return {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False)}]}
 
 

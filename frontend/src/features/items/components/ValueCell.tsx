@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ItemValue } from "../api";
 
@@ -23,11 +24,21 @@ type Props = {
 /** 値ひとつ分のセル。**読み取り元（ファイル名と位置）を値のすぐ下に出す**（KPI7）。 */
 export function ValueCell({ field, value, numeric, onOpenSource }: Props) {
   const { t } = useTranslation();
+  const [showMissingNote, setShowMissingNote] = useState(false);
   if (!value) return <td className={numeric ? "num" : undefined} />;
   if (value.state === "needs_confirmation") {
+    // 要確認の値は読み取り元を持たないので SCR-06 は開かない。
+    // 代わりに「引合書に記載がありません」と出す（③ SCR-05 の操作の表）
     return (
-      <td className={numeric ? "num" : undefined}>
+      <td
+        className={numeric ? "num" : undefined}
+        title={t("items.notInDocument")}
+        onClick={() => setShowMissingNote(true)}
+      >
         <span className="val-missing">{t("items.needsConfirmation")}</span>
+        {showMissingNote ? (
+          <div className="orig">{t("items.notInDocument")}</div>
+        ) : null}
       </td>
     );
   }
