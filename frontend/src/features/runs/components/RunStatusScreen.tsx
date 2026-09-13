@@ -110,6 +110,13 @@ export function RunStatusScreen({ runId }: { runId: string }) {
                 ),
               })}
             </span>
+            <div className="spacer" style={{ flex: 1 }} />
+            <Link
+              className="btn btn-sm"
+              href={`/inquiries/${data.inquiry_id}/unreadable`}
+            >
+              {t("run.seeDetail")}
+            </Link>
           </div>
         ) : null}
 

@@ -3,12 +3,13 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.errors import api_error
 from app.api.v1.schemas import (
     BulkCheckResponse,
+    RerunResponse,
     ConfirmResponse,
     ItemListResponse,
     ItemRowUpdate,
@@ -24,11 +25,13 @@ from app.api.v1.schemas.inquiry import (
 from app.core.dependencies import get_db
 from app.services import (
     confirm_service,
+    inquiry_service,
     inquiry_intake_service,
     input_exclusion_service,
     inquiry_list_service,
     item_edit_service,
     item_list_service,
+    rerun_service,
     source_excerpt_service,
 )
 from app.services.inquiry_intake_service import ACCEPTED_MESSAGE, IntakeError, UploadedFile
@@ -167,6 +170,39 @@ async def get_value_source(
         raise api_error(404, "NOT_FOUND", "値が見つかりません")
     await session.commit()
     return ValueSourceResponse(**payload)
+
+
+@router.post("/{inquiry_id}/runs", response_model=RerunResponse, status_code=202)
+async def rerun(inquiry_id: uuid.UUID, session: AsyncSession = Depends(get_db)) -> RerunResponse:
+    """エージェントの再実行（⑤ #7）。打ち切りで終わった案件だけ、1回まで。"""
+    try:
+        payload = await rerun_service.start_rerun(session, inquiry_id)
+    except rerun_service.RerunError as e:
+        raise api_error(409, e.code, e.message, reason=e.reason) from e
+    except Exception as e:  # 起動できなかった（案件は消さない）
+        raise api_error(500, "INTERNAL_ERROR", "エージェントを起動できませんでした") from e
+    if payload is None:
+        raise api_error(404, "NOT_FOUND", "案件が見つかりません")
+    return RerunResponse(**payload)
+
+
+@router.get("/{inquiry_id}/inputs/{input_id}/original")
+async def download_original(
+    inquiry_id: uuid.UUID, input_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+) -> FileResponse:
+    """原本のダウンロード（⑤ #16）。読み取れなかったときに手作業で補うために使う。"""
+    input_ = await inquiry_service.get_input(session, inquiry_id, input_id)
+    if input_ is None:
+        raise api_error(404, "NOT_FOUND", "入力が見つかりません")
+    if input_.kind == "mail_body":
+        return PlainTextResponse(
+            input_.content_text or "",
+            headers={"Content-Disposition": 'attachment; filename="mail_body.txt"'},
+        )
+    path = Path(input_.storage_path or "")
+    if not path.exists():
+        raise api_error(404, "NOT_FOUND", "原本が見つかりません")
+    return FileResponse(path, filename=input_.display_name)
 
 
 @router.post("/{inquiry_id}/inputs/{input_id}/exclusion", response_model=InputExclusionResponse)

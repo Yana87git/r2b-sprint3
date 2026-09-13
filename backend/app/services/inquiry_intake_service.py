@@ -133,8 +133,19 @@ async def create_inquiry(
     return inquiry, saved
 
 
-async def start_run(session: AsyncSession, inquiry_id: uuid.UUID, attempt_no: int = 1) -> str:
-    """エージェントを起動して run_id を返す。失敗したら案件ごと巻き戻す。"""
+async def start_run(
+    session: AsyncSession,
+    inquiry_id: uuid.UUID,
+    attempt_no: int = 1,
+    *,
+    rollback_on_failure: bool = True,
+) -> str:
+    """エージェントを起動して run_id を返す。
+
+    投入（⑤ #4）では、起動に失敗したら案件も原本も巻き戻す（受付済みのまま実行記録が
+    0件の案件を残さないため）。**再実行（#7）では巻き戻さない** — すでにある案件と
+    読み取り結果を消してしまうため。
+    """
     try:
         return await jobs.start_agent_job(
             START_PROMPT,
@@ -143,6 +154,8 @@ async def start_run(session: AsyncSession, inquiry_id: uuid.UUID, attempt_no: in
             attempt_no=attempt_no,
         )
     except Exception:
+        if not rollback_on_failure:
+            raise
         await session.execute(delete(Inquiry).where(Inquiry.id == inquiry_id))
         await session.commit()
         directory = storage_root() / str(inquiry_id)

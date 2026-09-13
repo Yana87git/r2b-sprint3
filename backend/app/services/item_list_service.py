@@ -101,6 +101,7 @@ async def get_items(
         "inquiry_id": str(inquiry_id),
         "title": inquiry.title,
         "status": inquiry.status,
+        "unreadable_reason": inquiry.unreadable_reason,
         "confirmed_at": _iso(inquiry.confirmed_at),
         "confirmed_by_name": names.get(inquiry.confirmed_by, "") if inquiry.confirmed_by else None,
         "pending_row_count": export.pending_row_count if export else None,

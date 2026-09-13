@@ -59,6 +59,7 @@ export type ItemList = {
   inquiry_id: string;
   title: string;
   status: string;
+  unreadable_reason: string | null;
   review_started_at: string | null;
   confirmed_at: string | null;
   confirmed_by_name: string | null;

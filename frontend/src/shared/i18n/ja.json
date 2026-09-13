@@ -93,7 +93,8 @@
     "edit": "修正",
     "openSourceFirst": "読み取り元を開くと確認できます",
     "openMoreSources": "あと {{n}} 行の読み取り元を開いてください。値をクリックすると開きます",
-    "selectAllConfident": "確信が高い行をまとめて確認済みにする"
+    "selectAllConfident": "確信が高い行をまとめて確認済みにする",
+    "pendingList": "要確認一覧（{{n}} 項目）"
   },
   "unreadableReason": {
     "illegible": "判読不能",
@@ -165,7 +166,8 @@
     "failed": "読み取り不可 — {{reason}}",
     "backToList": "一覧へ戻る",
     "startReview": "確認を始める",
-    "openResult": "結果を見る"
+    "openResult": "結果を見る",
+    "seeDetail": "詳細を見る"
   },
   "confirm": {
     "title": "この内容で確定しますか",
@@ -220,5 +222,39 @@
       "ALREADY_CONFIRMED": "確定済みの案件は直せません"
     },
     "markNeedsConfirmationOf": "{{field}}を要確認にする（引合書に記載がない）"
+  },
+  "pending": {
+    "title": "要確認一覧",
+    "back": "← 確認画面へ戻る",
+    "count": "要確認 {{items}} 項目（{{rows}} 行）",
+    "missing": "不足している項目",
+    "empty": "要確認の項目はありません。",
+    "messageTitle": "問い合わせ文面",
+    "scope3": "Scope 3",
+    "messageNote": "要確認の全項目を1通にまとめた文面の作成は、今回の範囲外です（Scope 3）。上の一覧を見ながら、これまでどおりメールで問い合わせてください。"
+  },
+  "unreadableScreen": {
+    "headline": "読み取り不可 — {{reason}}",
+    "detail": {
+      "timeout": "時間内に読み取りが終わらなかったため、処理を打ち切りました。一時的な要因の可能性があります。",
+      "max_turns": "決められた手順の回数内に読み取りが終わらなかったため、処理を打ち切りました。",
+      "illegible": "文字として読み取れる情報がありません（手書き・FAX 由来のスキャンなど）。",
+      "no_items": "文字は読み取れましたが、品目の明細と判断できる部分が見つかりませんでした。添付を確認のうえ、明細を含むファイルを投入し直してください。"
+    },
+    "readSoFar": "読めた範囲",
+    "nothingRead": "読み取れた範囲はありません。",
+    "partial": "{{n}} 行まで読み取り、その先は読めませんでした。",
+    "partialHint": "読めた範囲は参考表示です。ここから入力を続けることはできません。",
+    "fallback": "今までどおり Excel に転記してください。",
+    "originals": "原本",
+    "download": "ダウンロード",
+    "rerun": "再実行",
+    "rerunning": "再実行しています…",
+    "retryNotAllowed": {
+      "illegible": "判読不能のため再実行できません。読み直しても結果は変わりません。",
+      "no_items": "明細が見つからなかったため再実行できません。明細を含むファイルを投入し直してください。",
+      "already_retried": "再実行は1回までです。今までどおり Excel に転記してください。"
+    },
+    "notUnreadable": "この案件は「{{status}}」です。読み取り不可ではありません。"
   }
 }

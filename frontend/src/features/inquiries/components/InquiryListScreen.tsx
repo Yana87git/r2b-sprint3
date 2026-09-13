@@ -23,6 +23,8 @@ function destination(inquiry: InquiryListItem): string | null {
     return `/inquiries/${inquiry.inquiry_id}/items`;
   if (inquiry.status === "confirmed")
     return `/inquiries/${inquiry.inquiry_id}/done`;
+  if (inquiry.status === "unreadable")
+    return `/inquiries/${inquiry.inquiry_id}/unreadable`;
   if (inquiry.latest_run_id) return `/runs/${inquiry.latest_run_id}`;
   return null;
 }

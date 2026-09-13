@@ -63,6 +63,7 @@ class ItemListResponse(BaseModel):
     inquiry_id: str
     title: str
     status: str
+    unreadable_reason: str | None = None
     review_started_at: str | None
     confirmed_at: str | None = None
     confirmed_by_name: str | None = None

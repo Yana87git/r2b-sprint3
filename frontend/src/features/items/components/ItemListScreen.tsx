@@ -147,6 +147,14 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
           {t("classification.high_confidence")}{" "}
           <b>{summary.by_classification.high_confidence ?? 0}</b>
         </span>
+        <span className="spacer" style={{ flex: 1 }} />
+        {(summary.by_classification.needs_confirmation ?? 0) > 0 ? (
+          <Link className="btn btn-sm" href={`/inquiries/${inquiryId}/pending`}>
+            {t("items.pendingList", {
+              n: summary.by_classification.needs_confirmation ?? 0,
+            })}
+          </Link>
+        ) : null}
       </div>
 
       <div className="panel">

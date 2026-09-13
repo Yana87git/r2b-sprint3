@@ -13,3 +13,8 @@ class RunStatusResponse(BaseModel):
     eta_seconds: int = Field(description="残り時間の目安。目安を過ぎたら0")
     stop_reason: str | None
     unreadable_reason: str | None
+
+
+class RerunResponse(BaseModel):
+    run_id: str
+    attempt_no: int = Field(description="既存の実行回数 + 1（上限2）")
