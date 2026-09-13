@@ -5,6 +5,7 @@ import {
   bulkCheck,
   checkRow,
   excludeInput,
+  excludeRow,
   confirmInquiry,
   fetchItems,
   type ConfirmResult,
@@ -103,6 +104,18 @@ export function useUpdateRow(inquiryId: string, onSaved: () => void) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemsKey(inquiryId) });
       onSaved();
+    },
+  });
+}
+
+export function useExcludeRow(inquiryId: string, onDone?: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ rowId, excluded }: { rowId: string; excluded: boolean }) =>
+      excludeRow(inquiryId, rowId, excluded),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: itemsKey(inquiryId) });
+      onDone?.();
     },
   });
 }

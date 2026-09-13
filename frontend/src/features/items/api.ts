@@ -236,3 +236,22 @@ export function updateRow(
     },
   );
 }
+
+export type RowExclusionResult = {
+  row_id: string;
+  check_state: string;
+  excluded: boolean;
+  summary: ItemSummary;
+};
+
+/** ⑤ #13。除外は Excel に出さない・未確認から外す。取り消すと元の確認状態に戻る。 */
+export function excludeRow(
+  inquiryId: string,
+  rowId: string,
+  excluded: boolean,
+): Promise<RowExclusionResult> {
+  return request<RowExclusionResult>(
+    `/api/v1/inquiries/${inquiryId}/items/${rowId}/exclusion`,
+    { method: excluded ? "POST" : "DELETE" },
+  );
+}

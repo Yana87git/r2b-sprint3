@@ -88,14 +88,16 @@
     "sampled": "読み取り元を開いた行 {{sampled}} / {{required}}",
     "bulkCheck": "まとめて確認済みにする",
     "excludeInput": "手作業で補う（除外する）",
-    "cancelExclusion": "除外を取り消す",
+    "cancelExclusion": "取り消し",
     "excludedInput": "除外しました（手作業で補ってください）",
     "edit": "修正",
     "openSourceFirst": "読み取り元を開くと確認できます",
     "openMoreSources": "あと {{n}} 行の読み取り元を開いてください。値をクリックすると開きます",
     "selectAllConfident": "確信が高い行をまとめて確認済みにする",
     "pendingList": "要確認一覧（{{n}} 項目）",
-    "notInDocument": "引合書に記載がありません"
+    "notInDocument": "引合書に記載がありません",
+    "exclude": "除外",
+    "cancelInputExclusion": "除外を取り消す"
   },
   "unreadableReason": {
     "illegible": "判読不能",
@@ -223,7 +225,8 @@
       "REQUIRED_FIELD_EMPTY": "必須の項目は空欄にできません（分からない場合は要確認にしてください）",
       "ALREADY_CONFIRMED": "確定済みの案件は直せません"
     },
-    "markNeedsConfirmationOf": "{{field}}を要確認にする（引合書に記載がない）"
+    "markNeedsConfirmationOf": "{{field}}を要確認にする（引合書に記載がない）",
+    "excludeRow": "この行を除外する"
   },
   "pending": {
     "title": "要確認一覧",

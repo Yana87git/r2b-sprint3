@@ -173,6 +173,30 @@ async def check_row(
     return await _row_result(session, inquiry_id, row)
 
 
+async def exclude_row(
+    session: AsyncSession, inquiry_id: uuid.UUID, row_id: uuid.UUID, excluded: bool
+) -> dict[str, Any] | None:
+    """行の除外と取り消し（⑤ #13・② FUNC-05）。
+
+    **確認済みかどうかは触らない。** 除外を取り消したとき、除外する前の状態
+    （確認済み／未確認）にそのまま戻るようにするため（③ SCR-05 の操作の表）。
+    除外した行は未確認から外れ、一括確認の N（確信が高く、除外していない行）からも外れる。
+    """
+    row = await session.get(ItemRow, row_id)
+    if row is None or row.inquiry_id != inquiry_id:
+        return None
+    if excluded:
+        if row.excluded_at is None:
+            user = await UserRepository(session).get_fixed_user()
+            row.excluded_at = datetime.now(timezone.utc)
+            row.excluded_by = user.id if user else None
+    else:
+        row.excluded_at = None
+        row.excluded_by = None
+    await session.flush()
+    return await _row_result(session, inquiry_id, row)
+
+
 async def _row_result(session: AsyncSession, inquiry_id: uuid.UUID, row: ItemRow) -> dict[str, Any]:
     rows = list(
         (await session.execute(select(ItemRow).where(ItemRow.inquiry_id == inquiry_id))).scalars()

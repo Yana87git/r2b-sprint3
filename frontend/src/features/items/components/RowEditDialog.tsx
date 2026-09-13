@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "@/shared/api/client";
-import { useUpdateRow } from "../hooks";
+import { useExcludeRow, useUpdateRow } from "../hooks";
 import type { ItemRow, ItemValue, ItemValueUpdate } from "../api";
 
 const TEXT_FIELDS = ["item_name", "model_no", "quantity", "unit"] as const;
@@ -49,6 +49,8 @@ export function RowEditDialog({
   const { t } = useTranslation();
   const [draft, setDraft] = useState<Draft>(() => initialDraft(row));
   const update = useUpdateRow(inquiryId, onClose);
+  // ③ SCR-07: 入力中の内容は保存せずに、その行を除外して SCR-05 に戻る
+  const exclusion = useExcludeRow(inquiryId, onClose);
   const error = update.error instanceof ApiError ? update.error : null;
 
   const setValue = (field: string, patch: Partial<Draft["values"][string]>) =>
@@ -231,6 +233,15 @@ export function RowEditDialog({
         ) : null}
 
         <div className="actions">
+          <button
+            className="btn"
+            disabled={exclusion.isPending || update.isPending}
+            onClick={() =>
+              exclusion.mutate({ rowId: row.row_id, excluded: true })
+            }
+          >
+            {t("edit.excludeRow")}
+          </button>
           <span className="sub">{t("edit.savedRowIsChecked")}</span>
           <div className="spacer" />
           <button className="btn" onClick={onClose} disabled={update.isPending}>

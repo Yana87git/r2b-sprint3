@@ -14,6 +14,7 @@ from app.api.v1.schemas.item import (
     ItemRowUpdateResponse,
     ItemSummary,
     RowCheckResponse,
+    RowExclusionResponse,
     ValueSourceResponse,
 )
 from app.api.v1.schemas.run import RerunResponse, RunStatusResponse
@@ -31,6 +32,7 @@ __all__ = [
     "ItemRowUpdateResponse",
     "ItemSummary",
     "RowCheckResponse",
+    "RowExclusionResponse",
     "RerunResponse",
     "RunStatusResponse",
     "ValueSourceResponse",

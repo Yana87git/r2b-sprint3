@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { ApiError } from "@/shared/api/client";
-import { useBulkCheck, useCheckRow, useExcludeInput, useItems } from "../hooks";
+import {
+  useBulkCheck,
+  useCheckRow,
+  useExcludeInput,
+  useExcludeRow,
+  useItems,
+} from "../hooks";
 import type { Classification, ItemRow } from "../api";
 import { ItemRowLine } from "./ItemRowLine";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -29,6 +35,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const bulk = useBulkCheck(inquiryId);
   const exclusion = useExcludeInput(inquiryId);
   const [editing, setEditing] = useState<ItemRow | null>(null);
+  const rowExclusion = useExcludeRow(inquiryId);
 
   if (isPending) return <p className="meta">{t("common.loading")}</p>;
   if (isError) {
@@ -120,7 +127,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                   }
                 >
                   {input.excluded
-                    ? t("items.cancelExclusion")
+                    ? t("items.cancelInputExclusion")
                     : t("items.excludeInput")}
                 </button>
               </>
@@ -249,6 +256,9 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                         samplingMet={summary.sampled_rows >= requiredSamples}
                         onOpenSource={setOpenValueId}
                         onEdit={setEditing}
+                        onToggleExclusion={(rowId, excluded) =>
+                          rowExclusion.mutate({ rowId, excluded })
+                        }
                       />
                     ))}
                   </>
@@ -269,6 +279,9 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                       }
                       disabled
                       onOpenSource={setOpenValueId}
+                      onToggleExclusion={(rowId, excluded) =>
+                        rowExclusion.mutate({ rowId, excluded })
+                      }
                     />
                   ))}
                 </>

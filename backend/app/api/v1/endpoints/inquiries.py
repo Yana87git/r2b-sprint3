@@ -15,6 +15,7 @@ from app.api.v1.schemas import (
     ItemRowUpdate,
     ItemRowUpdateResponse,
     RowCheckResponse,
+    RowExclusionResponse,
     ValueSourceResponse,
 )
 from app.api.v1.schemas.inquiry import (
@@ -271,6 +272,42 @@ async def uncheck_row(
         raise api_error(404, "NOT_FOUND", "行が見つかりません")
     await session.commit()
     return RowCheckResponse(**payload)
+
+
+@router.post("/{inquiry_id}/items/{row_id}/exclusion", response_model=RowExclusionResponse)
+async def exclude_row(
+    inquiry_id: uuid.UUID, row_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+) -> RowExclusionResponse:
+    """行を除外する（⑤ #13）。Excel に出力せず、未確認からも外れる。"""
+    return await _set_row_exclusion(session, inquiry_id, row_id, excluded=True)
+
+
+@router.delete("/{inquiry_id}/items/{row_id}/exclusion", response_model=RowExclusionResponse)
+async def cancel_row_exclusion(
+    inquiry_id: uuid.UUID, row_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+) -> RowExclusionResponse:
+    """除外を取り消す（⑤ #13）。**除外する前の確認状態に戻る。**"""
+    return await _set_row_exclusion(session, inquiry_id, row_id, excluded=False)
+
+
+async def _set_row_exclusion(
+    session: AsyncSession, inquiry_id: uuid.UUID, row_id: uuid.UUID, *, excluded: bool
+) -> RowExclusionResponse:
+    inquiry = await item_list_service.get_inquiry(session, inquiry_id)
+    if inquiry is None:
+        raise api_error(404, "NOT_FOUND", "案件が見つかりません")
+    if inquiry.status == "confirmed":
+        raise api_error(409, "ALREADY_CONFIRMED", "確定済みの案件は変更できません")
+    payload = await item_list_service.exclude_row(session, inquiry_id, row_id, excluded)
+    if payload is None:
+        raise api_error(404, "NOT_FOUND", "行が見つかりません")
+    await session.commit()
+    return RowExclusionResponse(
+        row_id=payload["row_id"],
+        check_state=payload["check_state"],
+        excluded=excluded,
+        summary=payload["summary"],
+    )
 
 
 @router.post("/{inquiry_id}/items/bulk-check", response_model=BulkCheckResponse)

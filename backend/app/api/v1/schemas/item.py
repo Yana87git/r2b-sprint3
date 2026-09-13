@@ -81,6 +81,13 @@ class RowCheckResponse(BaseModel):
     summary: ItemSummary
 
 
+class RowExclusionResponse(BaseModel):
+    row_id: str
+    check_state: str = Field(description="除外では変えない（取り消しで元の状態に戻すため）")
+    excluded: bool
+    summary: ItemSummary
+
+
 class ExcerptCell(BaseModel):
     col: str
     text: str

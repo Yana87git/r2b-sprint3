@@ -13,6 +13,7 @@ type Props = {
   samplingMet?: boolean;
   onOpenSource?: (valueId: string) => void;
   onEdit?: (row: ItemRow) => void;
+  onToggleExclusion?: (rowId: string, excluded: boolean) => void;
 };
 
 /**
@@ -27,6 +28,7 @@ export function ItemRowLine({
   samplingMet = false,
   onOpenSource,
   onEdit,
+  onToggleExclusion,
 }: Props) {
   const { t } = useTranslation();
   const checked = row.check_state === "checked";
@@ -56,12 +58,30 @@ export function ItemRowLine({
           onChange={(e) => onToggleCheck(row.row_id, e.target.checked)}
         />
       </td>
-      <td>
-        {onEdit && !row.excluded ? (
-          <button className="btn btn-sm" onClick={() => onEdit(row)}>
-            {t("items.edit")}
+      <td style={{ whiteSpace: "nowrap" }}>
+        {row.excluded ? (
+          // 除外した行の操作は「取り消し」だけ（③ SCR-05）
+          <button
+            className="btn btn-sm"
+            onClick={() => onToggleExclusion?.(row.row_id, false)}
+          >
+            {t("items.cancelExclusion")}
           </button>
-        ) : null}
+        ) : (
+          <>
+            {onEdit ? (
+              <button className="btn btn-sm" onClick={() => onEdit(row)}>
+                {t("items.edit")}
+              </button>
+            ) : null}{" "}
+            <button
+              className="btn btn-sm"
+              onClick={() => onToggleExclusion?.(row.row_id, true)}
+            >
+              {t("items.exclude")}
+            </button>
+          </>
+        )}
       </td>
       <td className="cls">{t(`classification.${row.classification}`)}</td>
       <td>{row.row_no}</td>
