@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 
+from app.agent.trace import TraceRecorder
 from app.core.database import AsyncSessionLocal
 from app.models import AgentRun, Inquiry
 from app.repositories.agent_run_repository import AgentRunRepository
@@ -101,6 +102,12 @@ async def close_orphaned_runs() -> int:
             run.status = "finished"
             run.stop_reason = "failed"
             run.finished_at = datetime.now(timezone.utc)
+            # トレースにも終わりを残す（`.claude/rules/agent-development.md` §3
+            # 「すべての実行を記録する」。プロセスが死ぬと runner は run_end を書けないため、
+            # ここで書かないと**停止理由の無いトレース**が残り、⑥ 3章で評価できない）
+            TraceRecorder(run_id=str(run.run_id)).record_run_end(
+                "failed", detail="サーバーが停止したため実行が中断された（起動時に回収）"
+            )
             inquiry = await session.get(Inquiry, run.inquiry_id)
             if inquiry is not None and inquiry.status in ("received", "reading"):
                 inquiry.status = "unreadable"
