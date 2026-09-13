@@ -9,6 +9,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Inquiry, InquiryInput, ItemListExport, ItemRow, ItemValue, User, ValueClue
 from app.repositories.user_repository import UserRepository
 
+# 一括確認に必要な抜き取り（⑤ #12・④ と同じ数え方）
+REQUIRED_SAMPLES = 3
+
+
+class SamplingNotEnoughError(Exception):
+    """抜き取りが足りないので確認済みにできない（⑤ #11・#12 の 409）。
+
+    確信が高い行の規則は1つ:「その行の読み取り元を開いた」か「抜き取りが min(3, N) に
+    達している」かのどちらか。**個別チェックも一括も同じ判定**で、サーバー側で拒否する
+    （画面で押せなくするだけにしない。② FUNC-04）。
+    """
+
+    def __init__(self, sampled: int, required: int) -> None:
+        super().__init__("抜き取りが足りません")
+        self.sampled = sampled
+        self.required = required
+
+
 # 要確認 → 確信が低い → 確信が高い の順に見せる（③ SCR-05）
 CLASSIFICATION_ORDER = {"needs_confirmation": 0, "low_confidence": 1, "high_confidence": 2}
 UNREADABLE_STATUSES = ("unreadable",)
@@ -129,10 +147,22 @@ async def uncheck_row(
 async def check_row(
     session: AsyncSession, inquiry_id: uuid.UUID, row_id: uuid.UUID
 ) -> dict[str, Any] | None:
-    """行を確認済みにする（⑤ #11）。確認済みの行をもう一度押しても時刻は動かさない。"""
+    """行を確認済みにする（⑤ #11）。確認済みの行をもう一度押しても時刻は動かさない。
+
+    **確信が高い行を確認済みにできるのは、次のどちらかのときだけ**（② FUNC-04）:
+      (a) その行の読み取り元を開いた（`source_opened_at`）
+      (b) 抜き取りが min(3, N) に達している
+    画面だけで塞ぐと API を直接叩いて抜けられるので、ここでも判定する。
+    要確認・確信が低い行は対象外（1行ずつ確認する）。
+    """
     row = await session.get(ItemRow, row_id)
     if row is None or row.inquiry_id != inquiry_id:
         return None
+    if row.check_state != "checked" and row.classification == "high_confidence":
+        sampling = await _sampling_counts(session, inquiry_id)
+        opened = row.source_opened_at is not None
+        if not opened and sampling["sampled_rows"] < sampling["required_samples"]:
+            raise SamplingNotEnoughError(sampling["sampled_rows"], sampling["required_samples"])
     if row.check_state != "checked":
         user = await UserRepository(session).get_fixed_user()
         row.check_state = "checked"
@@ -238,20 +268,24 @@ def _iso(moment: datetime | None) -> str | None:
     return moment.isoformat() if moment else None
 
 
-# 一括確認に必要な抜き取り（⑤ #12・④ と同じ数え方）
-REQUIRED_SAMPLES = 3
-
-
-class SamplingNotEnoughError(Exception):
-    """抜き取りが足りないので一括確認できない（⑤ #12 の 409）。
-
-    **サーバー側で拒否する**（画面のボタンを押せなくするだけにしない。② FUNC-04）。
-    """
-
-    def __init__(self, sampled: int, required: int) -> None:
-        super().__init__("抜き取りが足りません")
-        self.sampled = sampled
-        self.required = required
+async def _sampling_counts(session: AsyncSession, inquiry_id: uuid.UUID) -> dict[str, int]:
+    """N = 確信が高く、除外していない行（確認済みかどうかは問わない）。④ と同じ数え方。"""
+    rows = list(
+        (
+            await session.execute(
+                select(ItemRow).where(
+                    ItemRow.inquiry_id == inquiry_id,
+                    ItemRow.classification == "high_confidence",
+                    ItemRow.excluded_at.is_(None),
+                )
+            )
+        ).scalars()
+    )
+    return {
+        "sampled_rows": sum(1 for r in rows if r.source_opened_at is not None),
+        "required_samples": min(REQUIRED_SAMPLES, len(rows)),
+        "confident_rows": len(rows),
+    }
 
 
 async def bulk_check(session: AsyncSession, inquiry_id: uuid.UUID) -> dict[str, Any]:
@@ -271,10 +305,9 @@ async def bulk_check(session: AsyncSession, inquiry_id: uuid.UUID) -> dict[str, 
             )
         ).scalars()
     )
-    sampled = sum(1 for r in confident if r.source_opened_at is not None)
-    required = min(REQUIRED_SAMPLES, len(confident))
-    if sampled < required:
-        raise SamplingNotEnoughError(sampled, required)
+    counts = await _sampling_counts(session, inquiry_id)
+    if counts["sampled_rows"] < counts["required_samples"]:
+        raise SamplingNotEnoughError(counts["sampled_rows"], counts["required_samples"])
 
     user = await UserRepository(session).get_fixed_user()
     now = datetime.now(timezone.utc)

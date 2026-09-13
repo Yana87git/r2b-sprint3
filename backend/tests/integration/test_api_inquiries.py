@@ -69,6 +69,13 @@ async def _delete_inquiry(inquiry_id: uuid.UUID) -> None:
     shutil.rmtree(inquiry_intake_service.storage_root() / str(inquiry_id), ignore_errors=True)
 
 
+async def _open_source(api, inquiry_id, row) -> None:
+    """確信が高い行は、読み取り元を開かないと確認できない（② FUNC-04）。"""
+    value_id = row["values"]["item_name"]["value_id"]
+    response = await api.get(f"/api/v1/inquiries/{inquiry_id}/values/{value_id}/source")
+    assert response.status_code == 200
+
+
 # --- #4 投入 ---------------------------------------------------------------
 
 
@@ -204,6 +211,7 @@ async def test_get_items_records_review_start_once(api, reviewable) -> None:
 async def test_check_row_reduces_unchecked(api, reviewable) -> None:
     rows = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()["rows"]
     row_id = rows[0]["row_id"]
+    await _open_source(api, reviewable, rows[0])
     response = await api.post(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
     assert response.status_code == 200
     body = response.json()
@@ -243,6 +251,7 @@ async def test_confirm_reports_unreadable_input_first(api, reviewable) -> None:
 
 async def test_confirm_outputs_excel(api, reviewable) -> None:
     rows = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()["rows"]
+    await _open_source(api, reviewable, rows[0])
     await api.post(f"/api/v1/inquiries/{reviewable}/items/{rows[0]['row_id']}/check")
 
     response = await api.post(f"/api/v1/inquiries/{reviewable}/confirm")
@@ -263,6 +272,7 @@ async def test_confirm_outputs_excel(api, reviewable) -> None:
 async def test_check_row_after_confirm_is_rejected(api, reviewable) -> None:
     rows = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()["rows"]
     row_id = rows[0]["row_id"]
+    await _open_source(api, reviewable, rows[0])
     await api.post(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
     await api.post(f"/api/v1/inquiries/{reviewable}/confirm")
 
@@ -286,10 +296,25 @@ async def test_rows_are_deleted_with_inquiry(api, created) -> None:
     assert count == 0
 
 
+async def test_check_row_needs_sampling(api, reviewable) -> None:
+    """読み取り元を開かず、抜き取りも足りない確信が高い行は、個別にも確認できない。"""
+    rows = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()["rows"]
+    response = await api.post(f"/api/v1/inquiries/{reviewable}/items/{rows[0]['row_id']}/check")
+    assert response.status_code == 409
+    detail = response.json()["detail"]
+    assert (detail["code"], detail["required_samples"]) == ("SAMPLING_NOT_ENOUGH", 1)
+
+    # 読み取り元を開けば、その行は確認できる
+    await _open_source(api, reviewable, rows[0])
+    ok = await api.post(f"/api/v1/inquiries/{reviewable}/items/{rows[0]['row_id']}/check")
+    assert ok.status_code == 200
+
+
 async def test_uncheck_row_puts_it_back(api, reviewable) -> None:
     """チェックは外せる（⑤ #11 の DELETE）。未確認の数が1つ増える。"""
     rows = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()["rows"]
     row_id = rows[0]["row_id"]
+    await _open_source(api, reviewable, rows[0])
     await api.post(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
 
     response = await api.delete(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
@@ -302,6 +327,7 @@ async def test_uncheck_row_puts_it_back(api, reviewable) -> None:
 async def test_uncheck_after_confirm_is_rejected(api, reviewable) -> None:
     rows = (await api.get(f"/api/v1/inquiries/{reviewable}/items")).json()["rows"]
     row_id = rows[0]["row_id"]
+    await _open_source(api, reviewable, rows[0])
     await api.post(f"/api/v1/inquiries/{reviewable}/items/{row_id}/check")
     await api.post(f"/api/v1/inquiries/{reviewable}/confirm")
 

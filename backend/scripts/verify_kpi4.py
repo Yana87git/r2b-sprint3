@@ -193,13 +193,24 @@ def run(client: httpx.Client, case: Case, inquiry_id: str) -> tuple[bool, str, l
         )
 
     # 2. 残りの行を確認する（#11）
+    #    **確信が高い行は、読み取り元を開かないと確認できない**（② FUNC-04）。人と同じ手順で開く
     items = client.get(f"/api/v1/inquiries/{inquiry_id}/items").raise_for_status().json()
     remaining = [r for r in items["rows"] if r["check_state"] != "checked" and not r["excluded"]]
+    opened = 0
     for row in remaining:
+        if row["classification"] == "high_confidence" and not row["source_opened"]:
+            value_id = next(
+                (v["value_id"] for v in row["values"].values() if v.get("source")), None
+            )
+            if value_id:
+                client.get(
+                    f"/api/v1/inquiries/{inquiry_id}/values/{value_id}/source"
+                ).raise_for_status()
+                opened += 1
         client.post(
             f"/api/v1/inquiries/{inquiry_id}/items/{row['row_id']}/check"
         ).raise_for_status()
-    log.append(f"確認: 残り {len(remaining)}行を確認済みにした")
+    log.append(f"確認: 読み取り元を {opened}行ぶん開き、残り {len(remaining)}行を確認済みにした")
 
     # 3. 確定する（#17）
     confirm = client.post(f"/api/v1/inquiries/{inquiry_id}/confirm")

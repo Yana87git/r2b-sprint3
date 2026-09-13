@@ -90,7 +90,10 @@
     "excludeInput": "手作業で補う（除外する）",
     "cancelExclusion": "除外を取り消す",
     "excludedInput": "除外しました（手作業で補ってください）",
-    "edit": "修正"
+    "edit": "修正",
+    "openSourceFirst": "読み取り元を開くと確認できます",
+    "openMoreSources": "あと {{n}} 行の読み取り元を開いてください。値をクリックすると開きます",
+    "selectAllConfident": "確信が高い行をまとめて確認済みにする"
   },
   "unreadableReason": {
     "illegible": "判読不能",

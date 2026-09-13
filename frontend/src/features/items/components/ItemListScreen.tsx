@@ -57,6 +57,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
     summary.by_classification.high_confidence ?? 0,
   );
   const bulkError = bulk.error instanceof ApiError ? bulk.error : null;
+  const checkError = check.error instanceof ApiError ? check.error : null;
 
   const group = (classifications: Classification[]): ItemRow[] =>
     active.filter((row) => classifications.includes(row.classification));
@@ -170,10 +171,26 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
               {GROUPS.map(({ key, classifications }) => {
                 const groupRows = group(classifications);
                 if (groupRows.length === 0) return null;
+                const allChecked = groupRows.every(
+                  (row) => row.check_state === "checked",
+                );
                 return (
                   <>
                     <tr className="group-row" key={key}>
-                      <td colSpan={11}>
+                      {/* 全選択は確信が高い行のグループにだけ置く。
+                          要確認・確信が低い行は1行ずつ確認するのが要件（② FUNC-04） */}
+                      <td className="check">
+                        {key === "confident" ? (
+                          <input
+                            type="checkbox"
+                            checked={allChecked}
+                            disabled={bulk.isPending || allChecked}
+                            aria-label={t("items.selectAllConfident")}
+                            onChange={() => bulk.mutate()}
+                          />
+                        ) : null}
+                      </td>
+                      <td colSpan={10}>
                         <span className="inline-row">
                           {t(`items.groups.${key}`, { n: groupRows.length })}
                           {key === "confident" ? (
@@ -184,19 +201,28 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                                   required: requiredSamples,
                                 })}
                               </span>
+                              {/* 押せないままにせず、押せて「次に何をすればいいか」を出す */}
                               <button
                                 className="btn btn-sm"
-                                disabled={
-                                  summary.sampled_rows < requiredSamples ||
-                                  bulk.isPending
-                                }
+                                disabled={bulk.isPending || allChecked}
                                 onClick={() => bulk.mutate()}
                               >
                                 {t("items.bulkCheck")}
                               </button>
                               {bulkError ? (
                                 <span className="error-text">
-                                  {bulkError.message}
+                                  {bulkError.code === "SAMPLING_NOT_ENOUGH"
+                                    ? t("items.openMoreSources", {
+                                        n:
+                                          Number(
+                                            bulkError.detail.required_samples ??
+                                              0,
+                                          ) -
+                                          Number(
+                                            bulkError.detail.sampled_rows ?? 0,
+                                          ),
+                                      })
+                                    : bulkError.message}
                                 </span>
                               ) : null}
                             </>
@@ -212,6 +238,7 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
                           check.mutate({ rowId, checked })
                         }
                         disabled={check.isPending}
+                        samplingMet={summary.sampled_rows >= requiredSamples}
                         onOpenSource={setOpenValueId}
                         onEdit={setEditing}
                       />
@@ -222,7 +249,8 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
               {excluded.length > 0 ? (
                 <>
                   <tr className="group-row">
-                    <td colSpan={11}>{t("items.groups.excluded")}</td>
+                    <td className="check" />
+                    <td colSpan={10}>{t("items.groups.excluded")}</td>
                   </tr>
                   {excluded.map((row) => (
                     <ItemRowLine
@@ -252,6 +280,17 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
       <div className="sticky-foot">
         <span className="sub">{t("items.footHint")}</span>
         <div className="spacer" />
+        {checkError ? (
+          <span className="error-text">
+            {checkError.code === "SAMPLING_NOT_ENOUGH"
+              ? t("items.openMoreSources", {
+                  n:
+                    Number(checkError.detail.required_samples ?? 0) -
+                    Number(checkError.detail.sampled_rows ?? 0),
+                })
+              : checkError.message}
+          </span>
+        ) : null}
         {summary.unchecked_rows > 0 ? (
           <span className="error-text">
             {t("items.uncheckedRemain", { n: summary.unchecked_rows })}

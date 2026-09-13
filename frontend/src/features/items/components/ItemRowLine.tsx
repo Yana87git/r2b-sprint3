@@ -9,6 +9,8 @@ type Props = {
   row: ItemRow;
   onToggleCheck: (rowId: string, checked: boolean) => void;
   disabled: boolean;
+  /** 抜き取りが足りていて、どの確信が高い行でも確認できる状態か */
+  samplingMet?: boolean;
   onOpenSource?: (valueId: string) => void;
   onEdit?: (row: ItemRow) => void;
 };
@@ -22,11 +24,20 @@ export function ItemRowLine({
   row,
   onToggleCheck,
   disabled,
+  samplingMet = false,
   onOpenSource,
   onEdit,
 }: Props) {
   const { t } = useTranslation();
   const checked = row.check_state === "checked";
+  // 確信が高い行を確認できるのは (a) その行の読み取り元を開いた (b) 抜き取りが足りている
+  // のどちらか（② FUNC-04）。要確認・確信が低い行はいつでも1行ずつ確認できる
+  const needsSampling =
+    row.classification === "high_confidence" &&
+    !row.source_opened &&
+    !samplingMet;
+  const lockedReason =
+    !checked && needsSampling ? t("items.openSourceFirst") : undefined;
   const className = [
     row.excluded ? "row-excluded" : "",
     checked ? "row-checked" : "",
@@ -36,12 +47,12 @@ export function ItemRowLine({
 
   return (
     <tr className={className || undefined}>
-      <td className="check">
+      <td className="check" title={lockedReason}>
         <input
           type="checkbox"
           checked={checked}
-          disabled={disabled || row.excluded}
-          aria-label={t("items.check")}
+          disabled={disabled || row.excluded || Boolean(lockedReason)}
+          aria-label={lockedReason ?? t("items.check")}
           onChange={(e) => onToggleCheck(row.row_id, e.target.checked)}
         />
       </td>

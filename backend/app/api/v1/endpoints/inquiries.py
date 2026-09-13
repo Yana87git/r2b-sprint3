@@ -141,7 +141,16 @@ async def check_row(
     if inquiry.status == "confirmed":
         raise api_error(409, "ALREADY_CONFIRMED", "確定済みの案件は変更できません")
 
-    payload = await item_list_service.check_row(session, inquiry_id, row_id)
+    try:
+        payload = await item_list_service.check_row(session, inquiry_id, row_id)
+    except item_list_service.SamplingNotEnoughError as e:
+        raise api_error(
+            409,
+            "SAMPLING_NOT_ENOUGH",
+            f"読み取り元を {e.required} 行ぶん開いてから確認してください",
+            sampled_rows=e.sampled,
+            required_samples=e.required,
+        ) from e
     if payload is None:
         raise api_error(404, "NOT_FOUND", "行が見つかりません")
     await session.commit()

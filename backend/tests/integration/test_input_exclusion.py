@@ -5,10 +5,11 @@ import pytest
 from sqlalchemy import delete, select
 
 from app.core.database import AsyncSessionLocal
-from app.models import Inquiry, InquiryInput
+from app.models import Inquiry, InquiryInput, ItemValue
 from app.services import confirm_service, input_exclusion_service
 from app.services.dev_fixtures import register_d1
 from app.services.item_draft_service import replace_rows
+from app.services.source_excerpt_service import get_source
 from tests.integration.test_check_completion import _good_row
 
 
@@ -42,6 +43,15 @@ async def with_unreadable():
         row = (
             await session.execute(select(ItemRow).where(ItemRow.inquiry_id == inquiry.id))
         ).scalar_one()
+        # 確信が高い行は、読み取り元を開かないと確認できない（② FUNC-04）
+        value = (
+            await session.execute(
+                select(ItemValue).where(
+                    ItemValue.item_row_id == row.id, ItemValue.field == "item_name"
+                )
+            )
+        ).scalar_one()
+        await get_source(session, inquiry.id, value.id)
         await check_row(session, inquiry.id, row.id)
         await session.commit()
         yield inquiry.id, ids
