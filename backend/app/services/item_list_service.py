@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Inquiry, InquiryInput, ItemListExport, ItemRow, ItemValue, User, ValueClue
 from app.repositories.user_repository import UserRepository
+from app.services import rerun_service
 
 # 一括確認に必要な抜き取り（⑤ #12・④ と同じ数え方）
 REQUIRED_SAMPLES = 3
@@ -102,6 +103,8 @@ async def get_items(
         "title": inquiry.title,
         "status": inquiry.status,
         "unreadable_reason": inquiry.unreadable_reason,
+        # 再実行できるかはサーバーが決める（③ SCR-10 の「再実行しても打ち切られた」）
+        "can_rerun": await rerun_service.can_rerun(session, inquiry),
         "confirmed_at": _iso(inquiry.confirmed_at),
         "confirmed_by_name": names.get(inquiry.confirmed_by, "") if inquiry.confirmed_by else None,
         "pending_row_count": export.pending_row_count if export else None,

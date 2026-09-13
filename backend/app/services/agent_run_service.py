@@ -73,6 +73,12 @@ async def finish_run(*, run_id: str, stop_reason: str, turns: int | None) -> Non
                 # check_completion が付けた失敗理由をそのまま実行にも残す
                 run.failure_reason = inquiry.unreadable_reason
             unreadable = STOP_REASON_TO_UNREADABLE.get(stop_reason)
+            if unreadable is None and stop_reason == "failed":
+                # `failed` は本来 check_completion が理由（判読不能・明細なし）を付けて終わる。
+                # 付いていないのは予期しない例外で落ちた場合で、**放っておくと案件が
+                # 「読み取り中」のまま残る**（close_orphaned_runs と同じ症状）。打ち切りと同じ扱いにし、
+                # 再実行できるようにする（④ の理由は illegible / no_items / timeout / max_turns の4つ）
+                unreadable = "timeout"
             if unreadable and inquiry.status in ("received", "reading"):
                 # 強制停止はエージェントが自分で記録できないので、サーバー側で付ける
                 inquiry.status = "unreadable"

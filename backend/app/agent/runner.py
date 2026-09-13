@@ -14,6 +14,7 @@ from dataclasses import dataclass
 
 from claude_agent_sdk import (
     AssistantMessage,
+    ResultError,
     ClaudeAgentOptions,
     ResultMessage,
     TextBlock,
@@ -132,6 +133,19 @@ async def run_agent(
                         result.stop_reason = "completed" if not message.is_error else "failed"
                     result.turns = message.num_turns
                     result.output = message.result
+    except ResultError as e:
+        # SDK は最大ターン数超過を **例外**で知らせる（`ResultMessage` は届かないことがある）。
+        # agent.md「停止理由と FUNC-07・SCR-10 の理由の対応」で `max_turns` は
+        # 「読み取り不可（最大ターン数超過）・再実行1回」に対応するので、ここで拾い分ける。
+        # それ以外の終了（API エラー等）は failed のまま
+        hit_max_turns = e.subtype == "error_max_turns" or e.terminal_reason == "max_turns"
+        result.stop_reason = "max_turns" if hit_max_turns else "failed"
+        result.turns = turn
+        result.elapsed_s = time.monotonic() - started
+        trace.record_run_end(
+            result.stop_reason, turns=turn, elapsed_s=result.elapsed_s, detail=repr(e)
+        )
+        return result
     except TimeoutError:
         # 内側タイムアウト発火（agent.md の強制停止）。記録してから返す
         result.stop_reason = "inner_timeout"

@@ -7,7 +7,7 @@ from sqlalchemy import delete, select
 
 from app.core.database import AsyncSessionLocal
 from app.models import AgentRun, Inquiry, InquiryInput
-from app.services import rerun_service
+from app.services import agent_run_service, rerun_service
 from app.services.dev_fixtures import register_d1
 
 
@@ -152,3 +152,41 @@ async def test_inquiry_is_kept_when_start_fails(unreadable, monkeypatch) -> None
             await rerun_service.start_rerun(session, unreadable)
     async with AsyncSessionLocal() as session:
         assert await session.get(Inquiry, unreadable) is not None
+
+
+@pytest.mark.parametrize(
+    ("stop_reason", "expected"),
+    [("max_turns", "max_turns"), ("inner_timeout", "timeout"), ("failed", "timeout")],
+)
+async def test_finish_run_marks_unreadable(stop_reason, expected) -> None:
+    """打ち切り（と予期しない失敗）は案件を「読み取り不可」にする。
+
+    `agent.md` の停止理由の表どおりに理由を付ける。**読み取り中のまま残さない**
+    （残ると一覧と処理状況が永遠に「読み取り中」に見える）。
+    """
+    run_id = uuid.uuid4()
+    async with AsyncSessionLocal() as session:
+        inquiry = await register_d1(session)
+        inquiry.status = "reading"
+        session.add(
+            AgentRun(
+                run_id=run_id,
+                inquiry_id=inquiry.id,
+                attempt_no=1,
+                model="claude-sonnet-5",
+                max_turns=30,
+                status="running",
+                started_at=datetime.now(timezone.utc),
+                trace_path="traces/dummy.jsonl",
+            )
+        )
+        await session.commit()
+        inquiry_id = inquiry.id
+
+    await agent_run_service.finish_run(run_id=str(run_id), stop_reason=stop_reason, turns=3)
+
+    async with AsyncSessionLocal() as session:
+        saved = await session.get(Inquiry, inquiry_id)
+        assert (saved.status, saved.unreadable_reason) == ("unreadable", expected)
+        await session.execute(delete(Inquiry).where(Inquiry.id == inquiry_id))
+        await session.commit()

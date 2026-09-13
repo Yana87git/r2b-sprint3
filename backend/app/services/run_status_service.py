@@ -1,4 +1,5 @@
 """実行の進み具合（⑤ #8）。agent_runs と入力の状態から段階・残り時間・停止理由を返す。"""
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -10,10 +11,19 @@ from app.agent.trace import TraceRecorder
 from app.models import Inquiry, InquiryInput
 from app.repositories.agent_run_repository import AgentRunRepository
 
+
+def _env_int(name: str, default: int) -> int:
+    """評価のときだけ環境変数で上書きする（app/agent/definition.py と同じ考え方）。"""
+    raw = os.getenv(name)
+    return default if raw is None or raw.strip() == "" else int(raw)
+
+
 SETTLED_STATUSES = ("read", "read_no_items", "unreadable")
-# 残り時間の目安（③ SCR-04「あと約2分」）。D1（入力2件）で約140秒だった実測に合わせる
-ETA_BASE_S = 30
-ETA_PER_INPUT_S = 60
+# 残り時間の目安（③ SCR-04「あと約2分」）。D1（入力2件）で約140秒だった実測に合わせる。
+# **評価（⑥ TEST-19 #6「目安を過ぎた」）のときだけ環境変数で下げられる。**
+# 本番の既定値は 30 秒 ＋ 入力1件あたり 60 秒。下げたまま戻し忘れないこと
+ETA_BASE_S = _env_int("ETA_BASE_S", 30)
+ETA_PER_INPUT_S = _env_int("ETA_PER_INPUT_S", 60)
 
 
 async def get_status(session: AsyncSession, run_id: uuid.UUID) -> dict[str, Any] | None:

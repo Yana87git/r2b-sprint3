@@ -55,9 +55,12 @@ export function ItemListScreen({ inquiryId }: { inquiryId: string }) {
   const { summary, rows, inputs } = data;
   const active = rows.filter((row) => !row.excluded);
   const excluded = rows.filter((row) => row.excluded);
-  // 未確認が残っている間は押させない。読み取れなかった入力は**サーバー側に拒否させる**
-  // （409 UNREADABLE_INPUT_REMAINS を確認ダイアログに出す。除外すれば確定できる、と伝わる）
-  const canConfirm = summary.unchecked_rows === 0;
+  // ③ SCR-05:「未確認が0で、かつ読み取れなかった入力が0件のときだけ押せる。
+  // 押せないときは理由を横に出す」。**確定を止める規則は1つ**で、経路（未確認・読み取り不可）で
+  // 変えない。押せないときの次の行動は横の文言で示す（「除外すると確定できます」など）。
+  // サーバー側も同じ条件で拒否する（#17 の 409。画面だけに頼らない）
+  const canConfirm =
+    summary.unchecked_rows === 0 && summary.unreadable_input_count === 0;
 
   const requiredSamples = Math.min(
     3,

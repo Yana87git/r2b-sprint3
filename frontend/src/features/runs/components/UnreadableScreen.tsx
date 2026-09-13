@@ -45,8 +45,11 @@ export function UnreadableScreen({ inquiryId }: { inquiryId: string }) {
   }
 
   const reason = data.unreadable_reason ?? "illegible";
-  // 打ち切り（タイムアウト・最大ターン数超過）だけ、もう一度読み直す意味がある
-  const retryable = reason === "timeout" || reason === "max_turns";
+  // 打ち切り（タイムアウト・最大ターン数超過）だけ、もう一度読み直す意味がある。
+  // **1回まで**という上限もサーバーが判定する（③ SCR-10「再実行しても打ち切られた」）
+  const retryable = data.can_rerun;
+  const retriedOut =
+    !retryable && (reason === "timeout" || reason === "max_turns");
   const rows = data.rows.filter((row) => !row.excluded);
 
   return (
@@ -119,7 +122,11 @@ export function UnreadableScreen({ inquiryId }: { inquiryId: string }) {
         )}
         {retryable ? null : (
           <p style={{ marginTop: 14, fontWeight: "var(--weight-medium)" }}>
-            {t("unreadableScreen.fallback")}
+            {t(
+              retriedOut
+                ? "unreadableScreen.retriedFallback"
+                : "unreadableScreen.fallback",
+            )}
           </p>
         )}
       </div>

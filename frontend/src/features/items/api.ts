@@ -60,6 +60,8 @@ export type ItemList = {
   title: string;
   status: string;
   unreadable_reason: string | null;
+  /** SCR-10 に「再実行」を出してよいか。**判定はサーバー（⑤ #9）が持つ** */
+  can_rerun: boolean;
   review_started_at: string | null;
   confirmed_at: string | null;
   confirmed_by_name: string | null;

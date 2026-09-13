@@ -64,6 +64,9 @@ class ItemListResponse(BaseModel):
     title: str
     status: str
     unreadable_reason: str | None = None
+    can_rerun: bool = Field(
+        default=False, description="SCR-10 に「再実行」を出してよいか（1回まで）"
+    )
     review_started_at: str | None
     confirmed_at: str | None = None
     confirmed_by_name: str | None = None

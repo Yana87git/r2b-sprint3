@@ -28,6 +28,22 @@ class RerunError(Exception):
         self.reason = reason
 
 
+async def can_rerun(session: AsyncSession, inquiry: Inquiry) -> bool:
+    """SCR-10 に「再実行」を出してよいか。
+
+    **start_rerun と同じ規則で判定する。** 画面だけが独自に判断すると、押せるのに
+    サーバーが 409 を返す（③ SCR-10「再実行しても打ち切られた」の行と食い違う）。
+    """
+    if inquiry.status != "unreadable" or inquiry.unreadable_reason not in RETRYABLE_REASONS:
+        return False
+    runs = list(
+        (await session.execute(select(AgentRun).where(AgentRun.inquiry_id == inquiry.id))).scalars()
+    )
+    if any(r.status == "running" for r in runs):
+        return False
+    return len(runs) + 1 <= MAX_ATTEMPTS
+
+
 async def start_rerun(session: AsyncSession, inquiry_id: uuid.UUID) -> dict[str, Any] | None:
     inquiry = await session.get(Inquiry, inquiry_id)
     if inquiry is None:
