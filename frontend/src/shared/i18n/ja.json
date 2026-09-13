@@ -149,8 +149,8 @@
       "mail_body": "メール本文として読みます"
     },
     "rejectXls": ".xls（旧 Excel 形式）は扱えません。.xlsx で保存し直してください",
-    "rejectFormat": "扱えない形式です（.xlsx / .pdf / .docx のみ）",
-    "rejectSize": "ファイルサイズが上限（20MB）を超えています",
+    "rejectFormat": "この形式は受け付けられません（対応: .xlsx .pdf .docx ＋ メール本文）",
+    "rejectSize": "ファイルサイズが上限（20MB）を超えています（{{size}}）",
     "rejectCount": "1件の引合に投入できるファイルは10件まで、合計50MBまでです（現在 {{files}}件・{{size}}）",
     "columns": {
       "file": "ファイル",

@@ -132,7 +132,9 @@ export function IntakeScreen() {
                       {item.ok ? (
                         <b>{t(item.messageKey)}</b>
                       ) : (
-                        t(item.messageKey)
+                        t(item.messageKey, {
+                          size: formatBytes(item.file.size),
+                        })
                       )}
                     </td>
                     <td>
