@@ -206,10 +206,9 @@
     "title": "{{row}}行目を直す",
     "lead": "原文は直せません。直すのは読み取った値です。保存すると、この行は確認済みになります。",
     "required": " ＊",
-    "markNeedsConfirmation": "要確認にする（引合書に記載がない）",
     "dueFixed": "確定日付",
     "dueMonthRange": "月内の範囲",
-    "dueNeedsConfirmation": "要確認",
+    "dueNeedsConfirmation": "納期を要確認にする",
     "save": "保存する",
     "saving": "保存しています…",
     "savedRowIsChecked": "保存すると確認済みになります",
@@ -219,6 +218,7 @@
       "DUE_RANGE_INVALID": "月内の範囲は同じ月の中で、開始日が終了日より後にならないようにしてください",
       "REQUIRED_FIELD_EMPTY": "必須の項目は空欄にできません（分からない場合は要確認にしてください）",
       "ALREADY_CONFIRMED": "確定済みの案件は直せません"
-    }
+    },
+    "markNeedsConfirmationOf": "{{field}}を要確認にする（引合書に記載がない）"
   }
 }

@@ -112,7 +112,11 @@ export function RowEditDialog({
                     setValue(field, { needsConfirmation: e.target.checked })
                   }
                 />{" "}
-                {t("edit.markNeedsConfirmation")}
+                {/* ラベルに項目名を入れる。項目が並ぶ中で「要確認にする」とだけ書くと、
+                    隣の項目に当ててしまう（⑥ TEST-05 の 2026-09-13 の計測で発生） */}
+                {t("edit.markNeedsConfirmationOf", {
+                  field: t(`items.columns.${field}`),
+                })}
               </label>
               {raw(field)?.raw_text ? (
                 <span className="orig">
