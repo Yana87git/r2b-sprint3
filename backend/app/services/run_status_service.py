@@ -42,13 +42,13 @@ async def get_status(session: AsyncSession, run_id: uuid.UUID) -> dict[str, Any]
         "status": inquiry.status if inquiry else None,
         "inputs_done": done,
         "inputs_total": len(inputs),
-        "eta_seconds": _eta_seconds(run.status, run.started_at, len(inputs)),
+        "eta_seconds": eta_seconds(run.status, run.started_at, len(inputs)),
         "stop_reason": run.stop_reason,
         "unreadable_reason": inquiry.unreadable_reason if inquiry else None,
     }
 
 
-def _eta_seconds(run_status: str, started_at: datetime, inputs_total: int) -> int:
+def eta_seconds(run_status: str, started_at: datetime, inputs_total: int) -> int:
     """残り時間の目安。終わっていれば 0、目安を過ぎても 0（画面はそこで文面を切り替える）。"""
     if run_status != "running":
         return 0

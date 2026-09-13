@@ -28,6 +28,9 @@ class InquiryListItem(BaseModel):
     unreadable_input_count: int
     pending_row_count: int | None = Field(description="確定済みの案件の「顧客回答待ち」の行数")
     latest_run_id: str | None = Field(description="最後の実行（SCR-04 へ進むときに使う）")
+    eta_seconds: int | None = Field(
+        default=None, description="読み取り中の残り時間の目安（③ SCR-02 の補足列）"
+    )
 
 
 class InquiryListResponse(BaseModel):

@@ -9,6 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import AgentRun, Inquiry, InquiryInput, ItemListExport, ItemRow, User
+from app.services.run_status_service import eta_seconds
 
 STATUSES = ("received", "reading", "unreadable", "awaiting_review", "confirmed")
 
@@ -86,6 +87,14 @@ async def list_inquiries(session: AsyncSession, status: str | None = None) -> di
                 "unreadable_input_count": unreadable_inputs.get(i.id, 0),
                 "pending_row_count": pending.get(i.id),
                 "latest_run_id": str(runs[i.id].run_id) if i.id in runs else None,
+                # 読み取り中の補足に出す残り時間の目安（③ SCR-02）。#8 と同じ計算を使う
+                "eta_seconds": (
+                    eta_seconds(
+                        runs[i.id].status, runs[i.id].started_at, len(formats.get(i.id, []) or [1])
+                    )
+                    if i.id in runs and i.status in ("received", "reading")
+                    else None
+                ),
             }
             for i in inquiries
         ],

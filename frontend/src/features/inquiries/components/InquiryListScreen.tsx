@@ -174,6 +174,14 @@ function Supplement({ inquiry }: { inquiry: InquiryListItem }) {
   if (inquiry.status === "confirmed" && inquiry.pending_row_count) {
     return <>{t("inquiries.pendingRows", { n: inquiry.pending_row_count })}</>;
   }
-  if (inquiry.status === "reading") return <>{t("inquiries.reading")}</>;
+  if (inquiry.status === "reading" || inquiry.status === "received") {
+    // ③ SCR-02 の補足列: 読み取り中は残り時間の目安を出す
+    if (inquiry.eta_seconds === null) return <>—</>;
+    return inquiry.eta_seconds > 0 ? (
+      <>{t("run.eta", { n: Math.ceil(inquiry.eta_seconds / 60) })}</>
+    ) : (
+      <>{t("inquiries.overdue")}</>
+    );
+  }
   return <>—</>;
 }

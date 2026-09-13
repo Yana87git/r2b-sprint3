@@ -13,6 +13,7 @@ export type InquiryListItem = {
   unreadable_input_count: number;
   pending_row_count: number | null;
   latest_run_id: string | null;
+  eta_seconds: number | null;
 };
 
 export type InquiryList = {
