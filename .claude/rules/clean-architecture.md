@@ -113,7 +113,9 @@ cd frontend && npm run typecheck
 - [ ] 内側の層が外側の層を import していない
 
 ### AI Agent 固有（エージェントスライスのとき）
-- [ ] 使用ツールが agent.md「ツール一覧」の範囲内（表にないツールを実装していない）
+- [ ] 使用ツールが agent.md「ツール一覧」の範囲内（表にないツールを実装していない。
+      `node .claude/scripts/spec-sync.mjs` が exit 0）
+- [ ] 設計と実装の食い違いを `/design-check` の判定を経て扱ったか（引用つきで「実装の誤り／設計の誤り／規定が無い／読み違い」のどれかを決めてから直したか）
 - [ ] definition.py の値（完了条件・max_turns・タイムアウト）が agent.md と一致
 - [ ] ガードレールが PreToolUse hook / disallowed_tools で強制されている（お願い止まりでない）
 - [ ] 起動が `jobs.start_agent_job()` 経由（HTTP で `run_agent()` を同期 await していない）

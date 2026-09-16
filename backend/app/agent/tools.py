@@ -1,4 +1,4 @@
-"""カスタムツール（agent.md「ツール一覧」の6つ + 疎通確認用の ping）。
+"""カスタムツール（agent.md「ツール一覧」の6つ。これ以外は公開しない）。
 
 list_input_files / read_file_content / save_item_rows / verify_sources /
 set_file_status / check_completion。
@@ -6,6 +6,8 @@ set_file_status / check_completion。
 - ツールは docs/requirements/agent.md「ツール一覧」と1対1で対応させる
 - ツールに生 SQL・生 HTTP を書かない（service / repository を経由する）
 - ツール名は mcp__app__{tool_name} の形式で allowed_tools に列挙する
+- **ここに足したツールは agent.md のツール一覧にも足す。**
+  食い違いは `.claude/scripts/spec-sync.mjs` が検出する（PostToolUse フックでも走る）
 """
 import json
 import uuid
@@ -23,11 +25,6 @@ from app.services import (
     source_verify_service,
 )
 from app.services.input_reader import DEFAULT_LIMIT, InputNotReadableError, read_input
-
-
-@tool("ping", "疎通確認用。受け取った message をそのまま返す", {"message": str})
-async def ping(args: dict[str, Any]) -> dict[str, Any]:
-    return {"content": [{"type": "text", "text": f"pong: {args['message']}"}]}
 
 
 @tool(
@@ -207,7 +204,6 @@ async def check_completion(args: dict[str, Any]) -> dict[str, Any]:
 
 
 AGENT_TOOLS = [
-    ping,
     list_input_files,
     read_file_content,
     save_item_rows,
@@ -219,7 +215,6 @@ AGENT_TOOLS = [
 agent_server = create_sdk_mcp_server(name="app", version="0.1.0", tools=AGENT_TOOLS)
 
 ALLOWED_TOOL_NAMES = [
-    "mcp__app__ping",
     "mcp__app__list_input_files",
     "mcp__app__read_file_content",
     "mcp__app__save_item_rows",
