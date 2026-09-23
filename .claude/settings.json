@@ -57,6 +57,10 @@
           {
             "type": "command",
             "command": "node .claude/scripts/design-lint.mjs --hook"
+          },
+          {
+            "type": "command",
+            "command": "node .claude/scripts/spec-sync.mjs --hook"
           }
         ]
       }
